@@ -1,4 +1,0 @@
-UID: 10209. OS accounting snapshot on disposable emulator (not a long-run power or network benchmark).
-  ident=[{type=1, ratType=COMBINED, wifiNetworkKey="AndroidWifi"open, metered=false, defaultNetwork=true, oemManaged=OEM_NONE, subId=-1}] uid=10209 set=FOREGROUND tag=0x0
-  ident=[{type=1, ratType=COMBINED, wifiNetworkKey="AndroidWifi"open, metered=false, defaultNetwork=true, oemManaged=OEM_NONE, subId=-1}] uid=10209 set=FOREGROUND tag=0xffffff82
-    uid=10209 set=1

@@ -1,3 +1,2 @@
 Performing Streamed Install
 Success
-Installed base.apk equals build output byte-for-byte.

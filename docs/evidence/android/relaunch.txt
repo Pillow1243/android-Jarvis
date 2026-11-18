@@ -1,7 +1,0 @@
-Starting: Intent { cmp=ai.nexus/.MainActivity }
-Status: ok
-LaunchState: COLD
-Activity: ai.nexus/.MainActivity
-TotalTime: 2630
-WaitTime: 2640
-Complete

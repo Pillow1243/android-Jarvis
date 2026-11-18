@@ -1,4 +1,0 @@
-Verified: opt-in via in-app disclosure, Android settings switch and OS confirmation.
-Open Display: window_visible
-Manual Display walkthrough: display_scrolled
-Verified: service disconnected after native opt-out.
