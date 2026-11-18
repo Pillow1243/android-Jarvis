@@ -1,107 +1,19 @@
-Downloading https://services.gradle.org/distributions/gradle-8.13-bin.zip
-.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%
-
-Welcome to Gradle 8.13!
-
-Here are the highlights of this release:
- - Daemon JVM auto-provisioning
- - Enhancements for Scala plugin and JUnit testing
- - Improvements for build authors and plugin developers
-
-For more details see https://docs.gradle.org/8.13/release-notes.html
-
-Starting a Gradle Daemon (subsequent builds will be faster)
-> Task :app:preBuild UP-TO-DATE
-> Task :app:preDebugBuild UP-TO-DATE
-> Task :app:checkDebugAarMetadata
-> Task :app:generateDebugResValues
-> Task :app:javaPreCompileDebug
-> Task :app:mapDebugSourceSetPaths
-> Task :app:generateDebugResources
-> Task :app:packageDebugResources
-> Task :app:mergeDebugResources
-> Task :app:createDebugCompatibleScreenManifests
-> Task :app:extractDeepLinksDebug
-> Task :app:parseDebugLocalResources
-> Task :app:processDebugMainManifest
-> Task :app:processDebugManifest
-> Task :app:preDebugUnitTestBuild UP-TO-DATE
-> Task :app:javaPreCompileDebugUnitTest
-> Task :app:processDebugManifestForPackage
-> Task :app:processDebugJavaRes NO-SOURCE
-> Task :app:processDebugUnitTestJavaRes NO-SOURCE
-> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:mergeDebugShaders
-> Task :app:compileDebugShaders NO-SOURCE
-> Task :app:generateDebugAssets UP-TO-DATE
-> Task :app:mergeDebugAssets
-> Task :app:compressDebugAssets
-> Task :app:checkDebugDuplicateClasses
-> Task :app:desugarDebugFileDependencies
-> Task :app:mergeExtDexDebug
-> Task :app:mergeLibDexDebug
-> Task :app:mergeDebugJniLibFolders
-> Task :app:mergeDebugNativeLibs NO-SOURCE
-> Task :app:stripDebugDebugSymbols NO-SOURCE
-> Task :app:processDebugResources
-> Task :app:mergeDebugJavaResource
-> Task :app:validateSigningDebug
-
-> Task :app:compileDebugJavaWithJavac
+Build lane: Android SDK 36 / Build Tools 35.0.0 / JDK 17
+openjdk version "17.0.21" 2026-10-20
+OpenJDK Runtime Environment Temurin-17.0.21+9 (build 17.0.21+9)
+OpenJDK 64-Bit Server VM Temurin-17.0.21+9 (build 17.0.21+9, mixed mode, sharing)
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-
-> Task :app:bundleDebugClassesToRuntimeJar
-> Task :app:bundleDebugClassesToCompileJar
-> Task :app:dexBuilderDebug
-> Task :app:compileDebugUnitTestJavaWithJavac
-> Task :app:testDebugUnitTest
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
-> Task :app:preDebugAndroidTestBuild SKIPPED
-> Task :app:checkDebugAndroidTestAarMetadata
-> Task :app:generateDebugAndroidTestResValues
-> Task :app:javaPreCompileDebugAndroidTest
-> Task :app:mapDebugAndroidTestSourceSetPaths
-> Task :app:generateDebugAndroidTestResources
-> Task :app:mergeDebugAndroidTestResources
-> Task :app:mergeProjectDexDebug
-> Task :app:processDebugAndroidTestManifest
-> Task :app:mergeDebugAndroidTestShaders
-> Task :app:compileDebugAndroidTestShaders NO-SOURCE
-> Task :app:generateDebugAndroidTestAssets UP-TO-DATE
-> Task :app:mergeDebugAndroidTestAssets
-> Task :app:compressDebugAndroidTestAssets
-> Task :app:processDebugAndroidTestJavaRes NO-SOURCE
-> Task :app:mergeDebugAndroidTestJavaResource
-> Task :app:checkDebugAndroidTestDuplicateClasses
-> Task :app:desugarDebugAndroidTestFileDependencies
-> Task :app:mergeExtDexDebugAndroidTest
-> Task :app:mergeDebugAndroidTestJniLibFolders
-> Task :app:mergeLibDexDebugAndroidTest
-> Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
-> Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
-> Task :app:validateSigningDebugAndroidTest
-> Task :app:writeDebugAndroidTestSigningConfigVersions
-> Task :app:packageDebug
-> Task :app:createDebugApkListingFileRedirect
-> Task :app:assembleDebug
-> Task :app:processDebugAndroidTestResources
-> Task :app:compileDebugAndroidTestJavaWithJavac
-> Task :app:dexBuilderDebugAndroidTest
-> Task :app:mergeProjectDexDebugAndroidTest
-> Task :app:packageDebugAndroidTest
-> Task :app:createDebugAndroidTestApkListingFileRedirect
-> Task :app:assembleDebugAndroidTest
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1795028464016.json
-
-[Incubating] Problems report is available at: file:///home/runner/work/android-Jarvis/android-Jarvis/build/reports/problems/problems-report.html
-
-Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
-
-You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
-
-For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
-
-BUILD SUCCESSFUL in 47s
-60 actionable tasks: 60 executed
+Generating 2,048 bit RSA key pair and self-signed certificate (SHA256withRSA) with a validity of 10,000 days
+	for: CN=Android Debug, O=Android, C=US
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+cdd3b85458b5b5149095048b1b294c1ddec4c461c9adeef0fab7ef18ae5f9848  build/sdk-debug/JARVIS-NEXUS.apk
+PASS: 50 host checks
+cb1e5ddf4597c22f28e40eaa80fc113da6a34b34ae6481fb2685035331b1b912  build/sdk-test/NEXUS-TEST.apk

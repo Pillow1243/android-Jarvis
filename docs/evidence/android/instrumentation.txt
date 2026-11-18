@@ -4,7 +4,9 @@ PASS  Entered two-step instruction through UI; verified real OS reads, duplicate
 PASS  SQLite create/edit/read/delete, fresh handle persistence, paused memory, secret guard and runnable shortcut
 PASS  Real Android contacts grant/denial, Persian search, disambiguation, confirmed dialer handoff (com.google.android.dialer), SMS decline and redaction
 PASS  Launchable app reached foreground: com.android.settings; accessibility opt-in, mic permission, voice engine available=true, real AlarmManager registration/cancellation
+PASS  Real foreground handoffs: Chrome sequence=com.android.chrome, YouTube query=com.android.chrome, Persian pharmacy route=com.google.android.apps.maps, SMS=com.google.android.apps.messaging, email=dispatched to com.google.android.gm, visible=com.google.android.apps.messaging (mailbox not verified). No send, account sign-in, route selection or search result claimed. Low-confidence transcript review tested via callback, not audio.
 PASS  Gemini wire-contract fixture (NOT live Gemini): partial-stream rejection, signatures, tool IDs, three planning rounds with real tool receipts, token parsing, quota guard
+PASS  Repair fixture on device: missing app, skipped dependent OS launch with matched function ID, real registry lookup on next model turn
 PASS  Cancellation, rotation, Persian RTL, foreground/background and interrupted journal recovery
 PASS  Actual Android Gemini client with intentionally invalid key: configuration; not an authenticated model success
-Assertions: 142
+Assertions: 159
