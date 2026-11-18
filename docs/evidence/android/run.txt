@@ -8,6 +8,7 @@ PASS  Real Android contacts grant/denial, Persian search, disambiguation, confir
 PASS  Launchable app reached foreground: com.android.settings; accessibility opt-in, mic permission, voice engine available=true, real AlarmManager registration/cancellation
 PASS  Gemini wire-contract fixture (NOT live Gemini): partial-stream rejection, signatures, tool IDs, three planning rounds with real tool receipts, token parsing, quota guard
 PASS  Cancellation, rotation, Persian RTL, foreground/background and interrupted journal recovery
-Assertions: 136
+PASS  Actual Android Gemini client with intentionally invalid key: configuration; not an authenticated model success
+Assertions: 152
 
 INSTRUMENTATION_CODE: -1

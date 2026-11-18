@@ -1,47 +1,47 @@
 Applications Memory Usage (in Kilobytes):
-Uptime: 110800 Realtime: 110800
+Uptime: 133001 Realtime: 133001
 
-** MEMINFO in pid 4328 [ai.nexus] **
+** MEMINFO in pid 4497 [ai.nexus] **
                    Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
                  Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
                 ------   ------   ------   ------   ------   ------   ------   ------
-  Native Heap    16346    16320        0       49    17360    30056    23970     1912
-  Dalvik Heap     2160     2116       24      126     3196     5082     2541     2541
- Dalvik Other     7305     3160        0        2    11804                           
-        Stack      676      676        0        0      684                           
-       Ashmem       11        0        0        0      576                           
-    Other dev       13        0       12        0      332                           
-     .so mmap     2500      316      360       10    34016                           
-    .jar mmap     2308        0      632        0    42280                           
-    .apk mmap    42695        0     7760        0   108292                           
-    .ttf mmap      355        0      284        0      792                           
-    .dex mmap       10        0        0        0      864                           
-    .oat mmap       26        0        0        0     1664                           
-    .art mmap     9596     7868     1392       86    24092                           
-   Other mmap     2107        4       32        0     5188                           
-      Unknown      624      620        0        3     1080                           
-        TOTAL    87008    31080    10496      276   252220    35138    26511     4453
+  Native Heap    15476    15448        4       39    16412    29032    23081     2011
+  Dalvik Heap     1566     1532       12      133     2624     4850     2457     2393
+ Dalvik Other     5628     1620        0        2     9976                           
+        Stack      740      740        0        0      744                           
+       Ashmem       10        0        0        0      576                           
+    Other dev       13        4        8        0      328                           
+     .so mmap     1857      200       48        8    34028                           
+    .jar mmap     2225        0      576        0    42184                           
+    .apk mmap    28018        0      132        0   107936                           
+    .ttf mmap      332        0      260        0      736                           
+    .dex mmap        8        0        0        0      864                           
+    .oat mmap       22        0        0        0     1664                           
+    .art mmap     9637     7864     1428       77    24168                           
+   Other mmap     2088        4       32        0     5164                           
+      Unknown      756      752        0        2     1208                           
+        TOTAL    68637    28164     2500      261   248612    33882    25538     4404
  
  App Summary
                        Pss(KB)                        Rss(KB)
                         ------                         ------
-           Java Heap:    11376                          27288
-         Native Heap:    16320                          17360
-                Code:     9936                         196776
-               Stack:      676                            684
+           Java Heap:    10824                          26792
+         Native Heap:    15448                          16412
+                Code:     1748                         195956
+               Stack:      740                            744
             Graphics:        0                              0
-       Private Other:     3268
-              System:    45432
-             Unknown:                                   10112
+       Private Other:     1904
+              System:    37973
+             Unknown:                                    8708
  
-           TOTAL PSS:    87008            TOTAL RSS:   252220       TOTAL SWAP PSS:      276
+           TOTAL PSS:    68637            TOTAL RSS:   248612       TOTAL SWAP PSS:      261
  
  Objects
-               Views:      173         ViewRootImpl:        1
+               Views:      126         ViewRootImpl:        1
          AppContexts:        6           Activities:        1
-              Assets:       41        AssetManagers:        0
-       Local Binders:       14        Proxy Binders:       55
-       Parcel memory:        5         Parcel count:       22
+              Assets:       20        AssetManagers:        0
+       Local Binders:       14        Proxy Binders:       54
+       Parcel memory:        6         Parcel count:       24
     Death Recipients:        0             WebViews:        0
  
  SQL
@@ -52,7 +52,7 @@ Uptime: 110800 Realtime: 110800
       pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
 PER CONNECTION STATS
          4       56             57     3    21     4  /data/user/0/ai.nexus/databases/nexus.db
-         4       56             42     6    17     3  /data/user/0/ai.nexus/databases/nexus.db (1)
+         4       56             42     2    17     3  /data/user/0/ai.nexus/databases/nexus.db (1)
 POOL STATS
      cache hits  cache misses    cache size  Dbname
-              9            40            49  /data/user/0/ai.nexus/databases/nexus.db
+              5            40            45  /data/user/0/ai.nexus/databases/nexus.db
