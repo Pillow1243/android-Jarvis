@@ -27,6 +27,10 @@ public final class Receipt {
     return new Receipt("failed", detail, code, J.obj());
   }
 
+  public static Receipt skipped(String detail) {
+    return new Receipt("skipped", detail, "prerequisite_failed", J.obj());
+  }
+
   public static Receipt denied(String detail) {
     return new Receipt("declined", detail, "not_authorized", J.obj());
   }

@@ -44,6 +44,14 @@ if grep -q NEXUS_TESTS_PASSED "$out/run.txt"; then
 fi
 adb shell dumpsys meminfo ai.nexus > "$out/memory.txt"
 adb shell dumpsys gfxinfo ai.nexus > "$out/frames.txt"
+if grep -q NEXUS_TESTS_PASSED "$out/run.txt"; then
+  # Same OS renderer, pixel count and six swipes on stock Settings for context. Different view content;
+  # neither this reference nor Nexus's debug frame sample qualifies a production handset.
+  adb shell am start -W -a android.settings.SETTINGS >/dev/null; sleep 2
+  adb shell dumpsys gfxinfo com.android.settings reset >/dev/null
+  for i in 1 2 3; do adb shell input swipe 480 1800 480 500 250; adb shell input swipe 480 500 480 1800 250; done
+  adb shell dumpsys gfxinfo com.android.settings > "$out/reference-settings-frames.txt"
+fi
 adb logcat -d -s AndroidRuntime:E > "$out/runtime-errors.txt"
 if grep -Fq 'FATAL EXCEPTION' "$out/runtime-errors.txt" && grep -Fq 'Process: ai.nexus' "$out/runtime-errors.txt"; then echo '::error::App crash in emulator log'; exit 1; fi
 sha256sum "$apk" | cut -d' ' -f1 > "$out/apk.sha256"

@@ -195,7 +195,9 @@ public final class NexusInstrumentation extends Instrumentation {
       scenario("memory", this::memory);
       scenario("contacts", this::contacts);
       scenario("platform", this::platform);
+      scenario("handoffs", this::handoffs);
       scenario("cloud", this::cloudContract);
+      scenario("repair", this::agentRepair);
       scenario("lifecycle", this::lifecycle);
       scenario("network", this::testDeviceNetwork);
       scenario("accessibility", this::accessibilityFlow);
@@ -252,7 +254,10 @@ public final class NexusInstrumentation extends Instrumentation {
     );
     for (Spec s : a.tools.specs.values())
       ok(
-        s.timeoutMs > 0 && s.outputSchema().has("properties") && !s.verification.isEmpty(),
+        s.timeoutMs > 0 &&
+          s.outputSchema().has("properties") &&
+          !s.verification.isEmpty() &&
+          s.errorCodes.contains("timeout_unknown"),
         "Complete tool descriptor"
       );
     ok(
@@ -593,6 +598,159 @@ public final class NexusInstrumentation extends Instrumentation {
     );
   }
 
+  private void agentRepair() throws Exception {
+    int[] round = { 0 };
+    Provider fixture = new Provider() {
+      public void cancel() {}
+
+      public JSONObject turn(
+        JSONArray history,
+        JSONArray decl,
+        String ctx,
+        String lang,
+        Consumer<String> partial
+      ) throws Exception {
+        ++round[0];
+        if (round[0] == 1) return J.obj(
+          "role",
+          "model",
+          "parts",
+          J.arr(
+            J.obj(
+              "functionCall",
+              J.obj("name", "find_app", "args", J.obj("name", "NEXUS_MISSING_38942"), "id", "lookup")
+            ),
+            J.obj(
+              "functionCall",
+              J.obj("name", "open_panel", "args", J.obj("panel", "wifi"), "id", "would_launch")
+            )
+          )
+        );
+        if (round[0] == 2) {
+          JSONArray p = history.getJSONObject(history.length() - 1).getJSONArray("parts");
+          JSONObject skipped = p.getJSONObject(1).getJSONObject("functionResponse");
+          if (
+            !"would_launch".equals(skipped.getString("id")) ||
+            !"skipped".equals(skipped.getJSONObject("response").getString("state"))
+          ) throw new AssertionError("Dependent call not paired with skip receipt");
+          return J.obj(
+            "role",
+            "model",
+            "parts",
+            J.arr(J.obj("functionCall", J.obj("name", "list_apps", "args", J.obj())))
+          );
+        }
+        return J.obj("role", "model", "parts", J.arr(J.obj("text", "End fixture")));
+      }
+    };
+    Agent test = ui(() -> new Agent(a, a.db, new ToolBox(), fixture));
+    try {
+      action(() -> test.submit("Use the repair fixture", true));
+      waitFor(() -> ui(() -> !test.running), "observation-based repair");
+      ok(
+        round[0] == 3 &&
+          test.stage.equals("partial") &&
+          test.steps.get(1).state.equals("skipped") &&
+          test.steps.get(2).code.equals("registry_read"),
+        "Failed real lookup skips the entire batch tail; new turn can inspect registry"
+      );
+      ok(
+        pkg().equals("ai.nexus") &&
+          a.db.scalar(
+            "SELECT count(*) FROM events WHERE step=? AND state='attempted'",
+            Long.toString(test.steps.get(1).row)
+          ) ==
+          0,
+        "Dependent system panel was never attempted"
+      );
+      record(
+        "Repair fixture on device: missing app, skipped dependent OS launch with matched function ID, real registry lookup on next model turn"
+      );
+    } finally {
+      action(test::close);
+    }
+  }
+
+  private String external(String regex, String explanation) throws Exception {
+    String[] seen = { "" };
+    waitFor(() -> (seen[0] = pkg()).matches(regex), explanation);
+    return seen[0];
+  }
+
+  private void handoffs() throws Exception {
+    String router = "android|com\\.android\\.intentresolver";
+    action(() -> a.submit("open Chrome then search YouTube for OpenJarvis", false));
+    String first = external("com.android.chrome", "real launched Chrome foreground");
+    returnToNexus();
+    ok(node("youtube\nOpenJarvis") != null, "Exact query before external transfer");
+    click("Approve action");
+    stage("handoff");
+    String search = external(
+      router + "|com.android.chrome|com.google.android.youtube",
+      "search destination or Android resolver"
+    );
+    returnToNexus();
+    action(() -> a.submit("منو به نزدیک‌ترین داروخانه ببر", false));
+    ok(node("Maps · route\nنزدیک‌ترین داروخانه") != null, "Exact Persian route query");
+    click("Approve action");
+    stage("handoff");
+    String maps = external(
+      router + "|com.android.chrome|com.google.android.apps.maps",
+      "route intent destination"
+    );
+    returnToNexus();
+    action(() -> a.run(new Call("compose_sms", "recipient", "+12025550101", "text", "Unsent fixture")));
+    ok(node("Number\n+12025550101\n\nUnsent fixture") != null, "Native SMS exact preview");
+    click("Approve action");
+    stage("handoff");
+    String sms = external(
+      router + "|com.google.android.apps.messaging|com.android.mms|com.android.messaging",
+      "SMS composer or system resolver"
+    );
+    returnToNexus();
+    action(() ->
+      a.run(
+        new Call(
+          "compose_email",
+          "to",
+          "qa@example.invalid",
+          "subject",
+          "Nexus QA",
+          "text",
+          "Unsent fixture"
+        )
+      )
+    );
+    ok(node("qa@example.invalid\nNexus QA\n\nUnsent fixture") != null, "Native email exact preview");
+    click("Approve action");
+    stage("handoff");
+    String email = external(
+      router + "|com.google.android.gm|com.android.email",
+      "mail destination or Android resolver"
+    );
+    returnToNexus();
+    action(() -> a.result("device report", true));
+    ok(
+      node("command_text") != null && node("device report") != null && !a.agent.running,
+      "Uncertain speech recognition result enters editable review, not dispatch"
+    );
+    shell("input keyevent 4");
+    if (find(auto.getRootInActiveWindow(), "command_text") != null) shell("input keyevent 4");
+    record(
+      "Real foreground handoffs: Chrome sequence=" +
+        first +
+        ", YouTube query=" +
+        search +
+        ", Persian pharmacy route=" +
+        maps +
+        ", SMS=" +
+        sms +
+        ", email=" +
+        email +
+        ". No send, account sign-in, route selection or search result claimed. Low-confidence transcript review tested via callback, not audio."
+    );
+  }
+
   private String serviceName() {
     return a.getString(ai.nexus.R.string.service_name);
   }
@@ -745,6 +903,15 @@ public final class NexusInstrumentation extends Instrumentation {
     );
   }
 
+  private boolean compactOrb(android.view.View v) {
+    if (v instanceof ai.nexus.ui.SignalField) return v.getHeight() > 0 && v.getHeight() <= a.k.d(150);
+    if (v instanceof android.view.ViewGroup) {
+      android.view.ViewGroup group = (android.view.ViewGroup) v;
+      for (int i = 0; i < group.getChildCount(); i++) if (compactOrb(group.getChildAt(i))) return true;
+    }
+    return false;
+  }
+
   private void lifecycle() throws Exception {
     action(() -> a.run(new Call("share_text", "text", "No external effect")));
     node("Approve action");
@@ -753,7 +920,18 @@ public final class NexusInstrumentation extends Instrumentation {
     ok(pkg().equals("ai.nexus"), "Cancellation did not dispatch chooser");
     action(() -> a.page("home"));
     auto.setRotation(UiAutomation.ROTATION_FREEZE_90);
-    SystemClock.sleep(600);
+    waitFor(
+      () ->
+        ui(
+          () ->
+            a.getResources().getConfiguration().orientation ==
+              android.content.res.Configuration.ORIENTATION_LANDSCAPE &&
+            compactOrb(a.getWindow().getDecorView())
+        ),
+      "compact landscape after actual relayout"
+    );
+    auto.waitForIdle(300, 4000);
+    SystemClock.sleep(450);
     ok(ui(() -> a.tab.equals("home") && a.active), "Rotation retains screen");
     shot("landscape");
     auto.setRotation(UiAutomation.ROTATION_FREEZE_0);

@@ -109,6 +109,9 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
   private void structure() {
     root = k.col();
     root.setFocusableInTouchMode(true);
+    root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+      if (or > ol && r - l != or - ol) changed();
+    });
     root.setOnApplyWindowInsetsListener((v, in) -> {
       if (Build.VERSION.SDK_INT >= 30) {
         android.graphics.Insets i = in.getInsets(
@@ -220,13 +223,10 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
     }
     releaseLayer.run();
     body.removeAllViews();
-    int gutter = Math.max(
-      18,
-      (int) ((getResources().getDisplayMetrics().widthPixels /
-            getResources().getDisplayMetrics().density -
-          660) /
-        2)
-    );
+    int width = scroll.getWidth() > 0
+      ? scroll.getWidth()
+      : getResources().getDisplayMetrics().widthPixels;
+    int gutter = Math.max(18, (int) ((width / getResources().getDisplayMetrics().density - 660) / 2));
     k.pad(body, gutter, 13, gutter, 22);
     screens.draw(body, tab);
     if (animate && motion()) {

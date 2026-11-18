@@ -35,11 +35,12 @@ public final class ToolBox {
     void run(Call c, Invocation h);
   }
 
-  public final Map<String, Spec> specs = new LinkedHashMap<>();
+  private final Map<String, Spec> registry = new LinkedHashMap<>();
+  public final Map<String, Spec> specs = Collections.unmodifiableMap(registry);
   private final Map<String, Handler> handlers = new HashMap<>();
 
   private void add(Spec s, Handler h) {
-    if (specs.put(s.id, s) != null) throw new IllegalStateException("Duplicate tool: " + s.id);
+    if (registry.put(s.id, s) != null) throw new IllegalStateException("Duplicate tool: " + s.id);
     handlers.put(s.id, h);
   }
 

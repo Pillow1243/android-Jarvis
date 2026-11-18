@@ -617,10 +617,30 @@ public final class Agent {
         !cloud ||
         r.code.equals("duplicate_blocked") ||
         r.code.contains("timeout") ||
+        r.code.equals("verify_failed") ||
+        r.code.equals("execution_error") ||
+        r.code.equals("permission_error") ||
         r.code.equals("scroll_unverified"))
     ) {
       finish(r.state.equals("declined") ? "declined" : "failed", r.detail);
       return;
+    }
+    if (!r.ok() && cloud) {
+      // Calls in a single model batch can depend on one another. A known-negative read/validation
+      // never authorizes its unobserved tail. Pair every skipped response with its original ID,
+      // then let the next model turn reason about the real observations before suggesting repair.
+      while (next < steps.size()) {
+        Step tail = steps.get(next);
+        Receipt skipped = Receipt.skipped(
+          t("Skipped after an earlier step failed; not attempted.", "پس از خطای مرحلهٔ قبل اجرا نشد.")
+        );
+        tail.state = skipped.state;
+        tail.code = skipped.code;
+        tail.detail = skipped.detail;
+        db.updateStep(tail.row, tail.state, tail.code);
+        results.put(Gemini.functionResult(fc.optJSONObject(next - batchStart), skipped));
+        next++;
+      }
     }
     later(this::advance);
   }

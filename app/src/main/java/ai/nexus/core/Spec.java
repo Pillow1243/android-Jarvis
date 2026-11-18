@@ -9,7 +9,8 @@ public final class Spec {
   public final String id, category, title, fa, description, permission, verification;
   public final int risk, timeoutMs;
   public final boolean cloud;
-  public final Map<String, String> fields = new LinkedHashMap<>();
+  public final Map<String, String> fields;
+  public final List<String> errorCodes;
 
   public Spec(
     String id,
@@ -33,7 +34,70 @@ public final class Spec {
     this.cloud = cloud;
     verification = verify;
     timeoutMs = 120000;
-    for (int i = 0; i < fields.length; i += 2) this.fields.put(fields[i], fields[i + 1]);
+    Map<String, String> schema = new LinkedHashMap<>();
+    for (int i = 0; i < fields.length; i += 2) schema.put(fields[i], fields[i + 1]);
+    this.fields = Collections.unmodifiableMap(schema);
+    List<String> errors = new ArrayList<>(
+      Arrays.asList(
+        "invalid_arguments",
+        "duplicate_blocked",
+        "execution_error",
+        "permission_error",
+        "timeout_unknown",
+        "prerequisite_failed"
+      )
+    );
+    if (risk >= 2 || !permission.isEmpty() || id.equals("launch_app")) errors.add("not_authorized");
+    if (
+      Arrays.asList(
+        "open_panel",
+        "open_interface",
+        "open_url",
+        "web_search",
+        "maps",
+        "launch_app",
+        "dial_contact",
+        "compose_sms",
+        "compose_email",
+        "share_text",
+        "display_walkthrough"
+      ).contains(id)
+    ) errors.add("no_handler");
+    switch (id) {
+      case "previous_app":
+        errors.add("back_unavailable");
+        break;
+      case "find_app":
+      case "launch_app":
+        errors.add("app_not_found");
+        break;
+      case "dial_contact":
+      case "compose_sms":
+        errors.add("invalid_number");
+      case "find_contact":
+        errors.add("contact_not_found");
+        break;
+      case "open_url":
+        errors.add("invalid_url");
+        break;
+      case "compose_email":
+        errors.add("invalid_email");
+        break;
+      case "recall_note":
+        errors.add("memory_paused");
+        break;
+      case "set_reminder":
+        errors.addAll(Arrays.asList("invalid_time", "notification_blocked"));
+      case "save_note":
+        errors.add("verify_failed");
+        break;
+      case "display_walkthrough":
+        errors.addAll(Arrays.asList("access_disabled", "access_unavailable", "scroll_unverified"));
+        break;
+      default:
+        break;
+    }
+    errorCodes = Collections.unmodifiableList(errors);
   }
 
   public String validate(Call c) {
@@ -85,7 +149,7 @@ public final class Spec {
       "properties",
       J.obj(
         "state",
-        J.obj("enum", J.arr("verified", "handed_off", "failed", "declined")),
+        J.obj("enum", J.arr("verified", "handed_off", "failed", "declined", "skipped")),
         "evidence",
         J.obj("type", "string"),
         "metrics",

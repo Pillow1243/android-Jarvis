@@ -302,6 +302,7 @@ public final class Store extends SQLiteOpenHelper {
   }
 
   public long reminder(long at, String text) {
+    if (Text.secret(text)) throw new IllegalArgumentException("Do not store secrets in reminders");
     return getWritableDatabase().insertOrThrow("reminders", null, values("stamp", at, "text", text));
   }
 

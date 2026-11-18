@@ -259,7 +259,7 @@ public final class Console {
     k.add(bottom, mic, 43, 43);
     hero.addView(bottom, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
     k.tap(hero, a::microphone, t("Voice control", "کنترل صوتی"));
-    k.add(v, hero, -1, a.getResources().getConfiguration().screenHeightDp < 420 ? 130 : 199);
+    k.add(v, hero, -1, a.getResources().getConfiguration().screenHeightDp < 470 ? 130 : 199);
     k.gap(v, 10);
     LinearLayout input = k.row();
     k.pad(input, 14, 0, 9, 0);
