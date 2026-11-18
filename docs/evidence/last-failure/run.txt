@@ -1,0 +1,7 @@
+INSTRUMENTATION_RESULT: stream=
+NEXUS_TESTS_FAILED
+java.lang.AssertionError: 1 device scenario(s) failed; see instrumentation.txt
+	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:204)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
+
+INSTRUMENTATION_CODE: 0
