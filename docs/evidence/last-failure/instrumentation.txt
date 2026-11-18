@@ -1,25 +1,10 @@
 PASS  Planner, Farsi normalization, schemas, registry and error classification
-PASS  Six native destinations; provider form validation, encrypted BYOK save/read/remove
-PASS  Entered two-step instruction through UI; verified real OS reads, duplicate guard, absent app and missing key
-PASS  SQLite create/edit/read/delete, fresh handle persistence, paused memory, secret guard and runnable shortcut
-PASS  Real Android contacts grant/denial, Persian search, disambiguation, confirmed dialer handoff (com.google.android.dialer), SMS decline and redaction
-PASS  Launchable app reached foreground: com.android.settings; accessibility opt-in, mic permission, voice engine available=true, real AlarmManager registration/cancellation
-FAIL  handoffs: java.lang.AssertionError: Timed out: mail destination or Android resolver
+FAIL  java.lang.AssertionError: Timed out: visible node: nav_agent
 	at ai.nexus.test.NexusInstrumentation.waitFor(NexusInstrumentation.java:93)
-	at ai.nexus.test.NexusInstrumentation.external(NexusInstrumentation.java:676)
-	at ai.nexus.test.NexusInstrumentation.handoffs(NexusInstrumentation.java:727)
-	at ai.nexus.test.NexusInstrumentation.$r8$lambda$-hvJGygFalxpnDdgr5wUok9V9Ds(Unknown Source:0)
-	at ai.nexus.test.NexusInstrumentation$$ExternalSyntheticLambda78.run(D8$$SyntheticClass:0)
-	at ai.nexus.test.NexusInstrumentation.scenario(NexusInstrumentation.java:38)
-	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:198)
+	at ai.nexus.test.NexusInstrumentation.node(NexusInstrumentation.java:119)
+	at ai.nexus.test.NexusInstrumentation.click(NexusInstrumentation.java:127)
+	at ai.nexus.test.NexusInstrumentation.navigation(NexusInstrumentation.java:274)
+	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:193)
 	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
 
-PASS  Gemini wire-contract fixture (NOT live Gemini): partial-stream rejection, signatures, tool IDs, three planning rounds with real tool receipts, token parsing, quota guard
-PASS  Repair fixture on device: missing app, skipped dependent OS launch with matched function ID, real registry lookup on next model turn
-PASS  Cancellation, rotation, Persian RTL, foreground/background and interrupted journal recovery
-PASS  Actual Android Gemini client with intentionally invalid key: configuration; not an authenticated model success
-FAIL  java.lang.AssertionError: 1 device scenario(s) failed; see instrumentation.txt
-	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:204)
-	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
-
-Assertions: 160
+Assertions: 32

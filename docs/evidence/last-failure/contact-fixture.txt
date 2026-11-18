@@ -1,4 +1,2 @@
 Broadcasting: Intent { act=ai.nexus.test.SEED flg=0x10400020 cmp=ai.nexus.test/.FixtureContacts }
-Broadcast completed: result=2, data="stage=cleanup exception=SecurityException unlocked=true read=0 write=0 detail=Permission Denial: writing com.android.providers.contacts.ContactsProvider2 uri content://com.android.contacts/raw_contacts from pid=2561, uid=10210 requires android.permission.WRITE_CONTACTS, or grantUriPermission()"
-Broadcasting: Intent { act=ai.nexus.test.SEED flg=0x10400020 cmp=ai.nexus.test/.FixtureContacts }
 Broadcast completed: result=42, data="provider_rows=2"

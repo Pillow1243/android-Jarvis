@@ -1,1 +1,0 @@
-NOT VERIFIED: Android did not offer the service toggle.
