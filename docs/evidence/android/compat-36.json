@@ -1,13 +1,13 @@
 {
   "api": "36",
   "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys",
-  "apk_sha256": "7fba63d4ddcc4ef9c9712bcf01242bef62505c6d782f8e384a9332f7627afdab",
+  "apk_sha256": "68b6b8e7c920ee0f415e4ccdfae115e33ed1193f8f2d8825b63ea3c90b59dcff",
   "passed": [
     "install",
     "launch and 360dp UI",
     "two-step diagnostics via visible controls",
     "killed at approval; safe interrupted receipt on restart, no dialer replay"
   ],
-  "startup": "Starting: Intent { cmp=ai.nexus/.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: ai.nexus/.MainActivity\nTotalTime: 2607\nWaitTime: 2643\nComplete",
+  "startup": "Starting: Intent { cmp=ai.nexus/.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: ai.nexus/.MainActivity\nTotalTime: 2711\nWaitTime: 2721\nComplete",
   "status": "pass"
 }
