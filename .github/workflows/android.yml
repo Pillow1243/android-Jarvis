@@ -3,6 +3,7 @@ on: [push, workflow_dispatch]
 permissions: { contents: read }
 jobs:
   device:
+    if: ${{ !contains(github.event.head_commit.message, '[publish-debug]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -115,3 +116,42 @@ jobs:
           printf 'Source: %s\nRun: https://github.com/%s/actions/runs/%s\nDevice job: %s\nCompatibility jobs: %s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$DEVICE_RESULT" "$COMPAT_RESULT" > "$dest/run-source.txt"
           git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$dest"; git commit -m "Record Android device evidence for ${GITHUB_SHA:0:8}"; git push origin "HEAD:$GITHUB_REF_NAME"
+
+  publish-debug:
+    # Attach an already tested, already tagged debug binary. Never rebuild, re-sign, overwrite
+    # an existing asset, create a tag, or accept an arbitrary upload destination or artifact URL.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/arena/f3d47646-android-jarvis' && contains(github.event.head_commit.message, '[publish-debug]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with: { distribution: temurin, java-version: '17' }
+      - name: Verify immutable tag, signed APK and all three installed-device proofs
+        run: |
+          set -euo pipefail
+          tag=v1.0.0-debug.1
+          git diff --exit-code "$tag" -- delivery app build.gradle settings.gradle gradle gradlew gradle.properties scripts/sdk-build.sh docs/evidence/android
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0" bash scripts/verify-delivery.sh
+      - name: Publish debug assets and independently download the public file
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          set -euo pipefail
+          tag=v1.0.0-debug.1; repo="$GITHUB_REPOSITORY"
+          gh api "repos/$repo/releases/tags/$tag" > /tmp/release-info.json
+          jq -e '.prerelease == true and .draft == false' /tmp/release-info.json >/dev/null
+          mkdir -p build/release-assets build/read-back
+          cp delivery/JARVIS-NEXUS.apk build/release-assets/
+          (cd build/release-assets && sha256sum JARVIS-NEXUS.apk > SHA256SUMS.txt)
+          for f in JARVIS-NEXUS.apk SHA256SUMS.txt; do
+            if ! jq -e --arg f "$f" '.assets[] | select(.name==$f)' /tmp/release-info.json >/dev/null; then
+              gh release upload "$tag" "build/release-assets/$f" --repo "$repo"
+            fi
+            # No token/cookies for this GET: exercise exactly the public browser download link.
+            curl --fail --silent --show-error --location --proto '=https' --max-time 60 --retry 2 "https://github.com/$repo/releases/download/$tag/$f" --output "build/read-back/$f"
+            cmp "build/release-assets/$f" "build/read-back/$f"
+          done
+          (cd build/read-back && sha256sum -c SHA256SUMS.txt)
+          echo "Public APK read-back matched the tested file: $(sha256sum delivery/JARVIS-NEXUS.apk | cut -d' ' -f1)" >> "$GITHUB_STEP_SUMMARY"
