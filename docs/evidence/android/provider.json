@@ -1,0 +1,5 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "valid_credential_test": "not run; no repository QA credential supplied",
+  "invalid_credential_http_status": 400
+}

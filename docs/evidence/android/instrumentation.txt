@@ -2,11 +2,10 @@ PASS  Planner, Farsi normalization, schemas, registry and error classification
 PASS  Six native destinations; provider form validation, encrypted BYOK save/read/remove
 PASS  Entered two-step instruction through UI; verified real OS reads, duplicate guard, absent app and missing key
 PASS  SQLite create/edit/read/delete, fresh handle persistence, paused memory, secret guard and runnable shortcut
-FAIL  java.lang.AssertionError: Expected completed, got failed: No matching phone contact. Try a shorter name or enter a number.
-	at ai.nexus.test.NexusInstrumentation.ok(NexusInstrumentation.java:27)
-	at ai.nexus.test.NexusInstrumentation.stage(NexusInstrumentation.java:30)
-	at ai.nexus.test.NexusInstrumentation.contacts(NexusInstrumentation.java:47)
-	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:41)
+FAIL  java.lang.AssertionError: Actual dialer package: 
+	at ai.nexus.test.NexusInstrumentation.ok(NexusInstrumentation.java:39)
+	at ai.nexus.test.NexusInstrumentation.contacts(NexusInstrumentation.java:379)
+	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:169)
 	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
 
-Assertions: 93
+Assertions: 108
