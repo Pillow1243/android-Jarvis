@@ -11,6 +11,7 @@ public final class FixtureContacts extends BroadcastReceiver {
 
   @Override
   public void onReceive(Context c, Intent i) {
+    String stage = "cleanup";
     try {
       c
         .getContentResolver()
@@ -23,8 +24,11 @@ public final class FixtureContacts extends BroadcastReceiver {
         setResult(0, "cleared", null);
         return;
       }
+      stage = "insert_one";
       add(c, "one", "مادر نکسوس یک", "+12025550101");
+      stage = "insert_two";
       add(c, "two", "مادر نکسوس دو", "+12025550102");
+      stage = "read_back";
       int matches = 0;
       try (
         Cursor cur = c
@@ -39,7 +43,24 @@ public final class FixtureContacts extends BroadcastReceiver {
       }
       setResult(matches == 2 ? 42 : 1, "provider_rows=" + matches, null);
     } catch (Exception e) {
-      setResult(2, e.getClass().getSimpleName(), null);
+      boolean unlocked = c.getSystemService(android.os.UserManager.class).isUserUnlocked();
+      String message = String.valueOf(e.getMessage()).replaceAll("[\r\n]", " ");
+      setResult(
+        2,
+        "stage=" +
+          stage +
+          " exception=" +
+          e.getClass().getSimpleName() +
+          " unlocked=" +
+          unlocked +
+          " read=" +
+          c.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) +
+          " write=" +
+          c.checkSelfPermission(android.Manifest.permission.WRITE_CONTACTS) +
+          " detail=" +
+          message.substring(0, Math.min(message.length(), 220)),
+        null
+      );
     }
   }
 

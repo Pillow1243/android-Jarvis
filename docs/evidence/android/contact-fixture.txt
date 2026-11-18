@@ -1,2 +1,2 @@
 Broadcasting: Intent { act=ai.nexus.test.SEED flg=0x400020 cmp=ai.nexus.test/.FixtureContacts }
-Broadcast completed: result=2, data="SecurityException"
+Broadcast completed: result=42, data="provider_rows=2"

@@ -14,7 +14,16 @@ adb install -r "$apk" | tee "$out/install.txt"; grep -q Success "$out/install.tx
 adb install -r -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb shell pm grant ai.nexus.test android.permission.READ_CONTACTS
 adb shell pm grant ai.nexus.test android.permission.WRITE_CONTACTS
-adb shell am broadcast --include-stopped-packages -a ai.nexus.test.SEED -n ai.nexus.test/ai.nexus.test.FixtureContacts | tee "$out/contact-fixture.txt"
+# The OS may still be bringing up user storage/providers just after a new image boots.
+# Keep the shell-restricted fixture package in the foreground and require both real provider rows.
+adb shell am start -W -n ai.nexus.test/ai.nexus.test.FixtureWindow > "$out/fixture-start.txt"
+: > "$out/contact-fixture.txt"
+for attempt in 1 2 3; do
+  adb shell am broadcast --user current --receiver-foreground --include-stopped-packages -a ai.nexus.test.SEED -n ai.nexus.test/ai.nexus.test.FixtureContacts | tee -a "$out/contact-fixture.txt"
+  if grep -q 'result=42' "$out/contact-fixture.txt"; then break; fi
+  # The fixture first removes only its two stable SOURCE_IDs. This is not a retry of any app action.
+  sleep 2
+done
 grep -q 'result=42' "$out/contact-fixture.txt" || { echo '::error::Contacts fixture precondition failed; see contact-fixture.txt'; exit 1; }
 adb shell am force-stop ai.nexus
 adb shell am start -W -n ai.nexus/.MainActivity | tee "$out/cold-start.txt"
