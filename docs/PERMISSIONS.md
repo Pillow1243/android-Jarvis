@@ -7,7 +7,7 @@
 | `READ_CONTACTS` (runtime) | Only for a named-recipient lookup. Local phone rows, bounded matches and explicit disambiguation. | No writing contacts, uploads of contact matches, directory syncing, silent calls or automatic sending. |
 | `POST_NOTIFICATIONS` (runtime on Android 13+) | Needed to show a confirmed local reminder. | No promotional notifications or hidden always-on microphone service. |
 | `RECEIVE_BOOT_COMPLETED` | Re-register existing reminders after boot. | Does not restart speech, cloud sessions or interrupted agent tasks. |
-| Launcher, speech and TTS `<queries>` | Discover relevant launchable activities and speech engines. | No `QUERY_ALL_PACKAGES`. |
+| Launcher, mail, speech and TTS `<queries>` | Discover launchable activities, installed mailto/email handlers and speech engines. Email drafts are package-limited to the reviewed destination. | No `QUERY_ALL_PACKAGES`. |
 | User-enabled `AccessibilityService` | Android, not Nexus, grants binding/access. The service is off by default and declares `isAccessibilityTool=false`. | No reading text/labels, screenshots, coordinates, arbitrary taps, typing, credential collection or autonomous accessibility planning. |
 | Documents | Android system picker for browsing or an explicitly requested JSON export | No broad filesystem permissions. The assistant never reads the chosen file as instructions. |
 

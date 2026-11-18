@@ -4,7 +4,7 @@ A native, Persian/English Android assistant that plans with Gemini and acts thro
 
 **Android 8.0+ · target SDK 36 · personal-key or managed-gateway mode · no local model or PC required.** This is a debug testing distribution, not a production-signed Play release.
 
-**[راهنمای فارسی نصب و استفاده](docs/FA.md)**
+**[راهنمای فارسی نصب و استفاده](docs/FA.md)** · [Debug distribution and release notes](docs/RELEASE.md) · [What passed / what remains unverified](docs/TESTING.md)
 
 ## Install and try it
 
@@ -49,10 +49,11 @@ If the SDK is already installed but Maven/Gradle distribution downloads are unav
 export JAVA_HOME=/path/to/jdk-17 ANDROID_HOME=/path/to/android-sdk
 scripts/sdk-build.sh       # build/sdk-debug/JARVIS-NEXUS.apk; actual debug signing and verification
 scripts/test-core.sh       # pure host checks
+scripts/sdk-device-tests.sh  # optional, separate test-only APK signed with the same debug key
 node --test gateway/security.test.mjs   # Node 22.18+ for the optional managed gateway
 ```
 
-The SDK script uses only `aapt2`, `javac`, `jar`, `d8`, `zip`, `zipalign`, `keytool` and `apksigner`. It creates a conventional **debug** keystore outside the checkout if none exists. No private signing material is stored in Git. A release build is deliberately not production-signed by this project.
+Explicit CI capture builds use this SDK-only lane so a Maven rate limit cannot silently substitute an untested APK. Ordinary CI builds use Gradle, including the JUnit wrapper around the same host checks. The SDK application build uses only `aapt2`, `javac`, `jar`, `d8`, `zip`, `zipalign`, `keytool` and `apksigner`. It creates a conventional **debug** keystore outside the checkout if none exists. No private signing material is stored in Git. A release build is deliberately not production-signed by this project.
 
 ## Engineering and release evidence
 
