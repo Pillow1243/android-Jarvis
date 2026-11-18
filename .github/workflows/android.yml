@@ -3,15 +3,17 @@ on: [push, workflow_dispatch]
 permissions: { contents: read }
 jobs:
   device:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v4
       - name: Build application and device tests
-        run: ./gradlew assembleDebug assembleDebugAndroidTest
+        run: |
+          mkdir -p build/device-evidence
+          ./gradlew --console=plain assembleDebug assembleDebugAndroidTest >build/device-evidence/compile.txt 2>&1 || { tail -100 build/device-evidence/compile.txt; echo "::error::$(tail -60 build/device-evidence/compile.txt | head -40 | tr '\n' ' ')"; exit 1; }
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -21,13 +23,36 @@ jobs:
         with:
           api-level: 35
           arch: x86_64
-          target: default
+          target: google_apis
           profile: pixel_6
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: bash scripts/device-test.sh
+      - name: Verify signature and collect binary
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk >build/device-evidence/signature.txt
+          cp app/build/outputs/apk/debug/app-debug.apk build/device-evidence/JARVIS-NEXUS.apk
       - uses: actions/upload-artifact@v4
         if: always()
-        with:
-          name: nexus-device-evidence
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            build/device-evidence/
+        with: { name: nexus-device-evidence, path: build/device-evidence/, retention-days: 14 }
+  # Only a maintainer's explicit capture commit on this delivery branch may publish evidence.
+  # Tests have no repository write token. Never force-push or replace newer work.
+  capture:
+    if: always() && github.ref == 'refs/heads/arena/f3d47646-android-jarvis' && contains(github.event.head_commit.message, '[capture]')
+    needs: device
+    permissions: { contents: write }
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: nexus-device-evidence, path: build/captured }
+      - name: Preserve emulator evidence on the delivery branch
+        env: { DEVICE_RESULT: '${{ needs.device.result }}' }
+        run: |
+          if [ "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" != "$GITHUB_SHA" ]; then echo 'Newer source exists; not publishing stale evidence.'; exit 0; fi
+          mkdir -p docs/evidence/android
+          rm -f docs/evidence/android/*
+          if [ "$DEVICE_RESULT" = success ]; then mkdir -p delivery; mv build/captured/JARVIS-NEXUS.apk delivery/; git add -f delivery/JARVIS-NEXUS.apk; fi
+          cp build/captured/* docs/evidence/android/
+          printf 'Source: %s\nRun: https://github.com/%s/actions/runs/%s\nDevice job: %s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$DEVICE_RESULT" > docs/evidence/android/run-source.txt
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/evidence/android; git commit -m "Record Android device evidence for ${GITHUB_SHA:0:8}"; git push origin "HEAD:$GITHUB_REF_NAME"

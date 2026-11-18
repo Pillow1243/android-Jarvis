@@ -1,0 +1,7 @@
+<resources>
+    <style name="NexusTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item><item name="android:colorAccent">#B8F978</item><item name="android:windowBackground">#0B100F</item><item name="android:statusBarColor">#0B100F</item><item name="android:navigationBarColor">#0B100F</item><item name="android:windowLightStatusBar">false</item><item name="android:windowLightNavigationBar">false</item><item name="android:windowActionModeOverlay">true</item><item name="android:colorControlHighlight">#33B8F978</item>
+    </style>
+    <string name="service_name">Nexus window receipts</string>
+    <string name="service_description">Optional: confirm the window opened by a Nexus command. A manually requested Display walkthrough can scroll the Android Display settings once. No typing, tapping, reading text, screenshots, or background monitoring.</string>
+</resources>
