@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
+    <application>
+        <activity android:name="ai.nexus.test.FixtureWindow" android:exported="true" android:permission="android.permission.DUMP" android:noHistory="true" android:excludeFromRecents="true"/>
+        <receiver android:name="ai.nexus.test.FixtureContacts" android:exported="true" android:permission="android.permission.DUMP"/>
+    </application>
+</manifest>

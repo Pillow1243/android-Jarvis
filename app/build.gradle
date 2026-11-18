@@ -1,0 +1,18 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'ai.nexus'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'ai.nexus'
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName '1.0.0'
+        testInstrumentationRunner 'ai.nexus.test.NexusInstrumentation'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+    buildTypes { release { minifyEnabled false } }
+}
+
+dependencies { testImplementation 'junit:junit:4.13.2' }

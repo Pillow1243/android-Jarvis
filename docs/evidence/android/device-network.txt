@@ -1,0 +1,7 @@
+probe=invalid_credential
+client=installed_android_https
+result=configuration
+verified=false
+elapsed_ms=472
+uid_received_bytes_delta=5625
+uid_transmitted_bytes_delta=1547

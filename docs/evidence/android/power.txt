@@ -1,0 +1,383 @@
+Statistics since last charge:
+  System starts: 1, currently on battery: false
+  Estimated battery capacity: 1000 mAh
+  Last learned battery capacity: 3000 mAh
+  Min learned battery capacity: 3000 mAh
+  Max learned battery capacity: 3000 mAh
+  Time on battery: 0ms (0.0%) realtime, 0ms (--%) uptime
+  Time on battery screen off: 0ms (--%) realtime, 0ms (--%) uptime
+  Time on battery screen doze: 0ms (--%)
+  Total run time: 2m 57s 378ms realtime, 2m 57s 378ms uptime
+  Discharge: 0 mAh
+  Screen off discharge: 0 mAh
+  Screen doze discharge: 0 mAh
+  Screen on discharge: 0 mAh
+  Device light doze discharge: 0 mAh
+  Device deep doze discharge: 0 mAh
+  Start clock time: 2026-11-18-19-49-51
+  Screen on: 0ms (--%) 0x, Interactive: 0ms (--%)
+  Screen brightnesses: (no activity)
+  Connectivity changes: 33
+
+  CONNECTIVITY POWER SUMMARY START
+  Logging duration for connectivity statistics: 0ms 
+  Cellular Statistics:
+     Cellular kernel active time: 0ms (--%)
+     Cellular Sleep time:  0ms (--%)
+     Cellular Idle time:   0ms (--%)
+     Cellular Rx time:     0ms (--%)
+     Cellular Tx time:     0ms (--%)
+     Active Cellular Radio Access Technology Breakdown:
+       (no activity)
+     Cellular data received: 0B
+     Cellular data sent: 0B
+     Cellular packets received: 0
+     Cellular packets sent: 0
+     Cellular Radio Access Technology: (no activity)
+     Cellular Rx signal strength (RSRP): (no activity)
+  Wifi Statistics:
+     Wifi kernel active time: 0ms (--%)
+     WiFi Scan time:  0ms (--%)
+     WiFi Sleep time:  0ms (--%)
+     WiFi Idle time:   0ms (--%)
+     WiFi Rx time:     0ms (--%)
+     WiFi Tx time:     0ms (--%)
+     Wifi data received: 0B
+     Wifi data sent: 0B
+     Wifi packets received: 0
+     Wifi packets sent: 0
+     Wifi states: (no activity)
+     Wifi supplicant states: (no activity)
+     Wifi Rx signal strength (RSSI): (no activity)
+  GPS Statistics:
+     GPS signal quality (Top 4 Average CN0):
+      poor (less than 20 dBHz): 0ms (--%) 
+      good (greater than 20 dBHz): 0ms (--%) 
+  CONNECTIVITY POWER SUMMARY END
+
+  Bluetooth total received: 0B, sent: 0B
+  Bluetooth scan time: 0ms 
+     Bluetooth Idle time:   0ms (--%)
+     Bluetooth Rx time:     0ms (--%)
+     Bluetooth Tx time:     0ms (--%)
+
+  Device battery use since last full charge
+    Amount discharged (lower bound): 0
+    Amount discharged (upper bound): 0
+    Amount discharged while screen on: 0
+    Amount discharged while screen off: 0
+    Amount discharged while screen doze: 0
+
+  Estimated power use (mAh):
+    Capacity: 3000, Computed drain: 0, actual drain: 0
+    Global
+      cpu: 0.00444 apps: 0.00436
+      audio: 0.000297 apps: 0.000297
+    UID 1000: 0.00199 ( cpu=0.00169 audio=0.000297 ) 
+    UID u0a143: 0.000443 bg: 0.000178 fgs: 0.000248 cached: 0.0000130 ( cpu=0.000443 cpu:bg=0.000178 cpu:fgs=0.000248 cpu:cached=0.0000130 ) 
+    UID 0: 0.000423 ( cpu=0.000423 ) 
+    UID u0a209: 0.000388 fg: 0.000292 fgs: 0.0000390 cached: 0.00000500 ( cpu=0.000388 cpu:fg=0.000292 cpu:fgs=0.0000390 cpu:cached=0.00000500 ) 
+    UID u0a181: 0.000148 ( cpu=0.000148 ) 
+    UID 1036: 0.000121 ( cpu=0.000121 ) 
+    UID u0a177: 0.000117 fg: 0.0000140 fgs: 0.000102 ( cpu=0.000117 cpu:fg=0.0000140 cpu:fgs=0.000102 ) 
+    UID u0a144: 0.000113 bg: 0.0000100 fgs: 0.000101 ( cpu=0.000113 cpu:bg=0.0000100 cpu:fgs=0.000101 ) 
+    UID u0a152: 0.000105 bg: 0.0000960 fgs: 0.00000800 ( cpu=0.000105 cpu:bg=0.0000960 cpu:fgs=0.00000800 ) 
+    UID u0a132: 0.000100 fg: 0.00000500 bg: 0.00000300 fgs: 0.0000720 ( cpu=0.000100 cpu:fg=0.00000500 cpu:bg=0.00000300 cpu:fgs=0.0000720 ) 
+    UID u0a156: 0.0000780 fg: 0.00000400 bg: 0.0000700 ( cpu=0.0000780 cpu:fg=0.00000400 cpu:bg=0.0000700 ) 
+    UID u0a166: 0.0000690 fg: 0.00000400 bg: 0.00000500 cached: 0.0000110 ( cpu=0.0000690 cpu:fg=0.00000400 cpu:bg=0.00000500 cpu:cached=0.0000110 ) 
+    UID u0a165: 0.0000650 fg: 0.0000550 cached: 0.00000400 ( cpu=0.0000650 cpu:fg=0.0000550 cpu:cached=0.00000400 ) 
+    UID u0a142: 0.0000530 bg: 0.0000100 fgs: 0.0000410 cached: 0.00000100 ( cpu=0.0000530 cpu:bg=0.0000100 cpu:fgs=0.0000410 cpu:cached=0.00000100 ) 
+    UID u0a129: 0.0000520 fg: 0.00000100 bg: 0.00000900 cached: 0.0000160 ( cpu=0.0000520 cpu:fg=0.00000100 cpu:bg=0.00000900 cpu:cached=0.0000160 ) 
+    UID u0a138: 0.0000490 fgs: 0.0000470 cached: 0.00000100 ( cpu=0.0000490 cpu:fgs=0.0000470 cpu:cached=0.00000100 ) 
+    UID u0a145: 0.0000470 fg: 0.00000300 cached: 0.0000350 ( cpu=0.0000470 cpu:fg=0.00000300 cpu:cached=0.0000350 ) 
+    UID 1001: 0.0000430 fg: 0.0000430 ( cpu=0.0000430 cpu:fg=0.0000430 ) 
+    UID u0a140: 0.0000310 bg: 0.00000600 fgs: 0.00000600 cached: 0.0000130 ( cpu=0.0000310 cpu:bg=0.00000600 cpu:fgs=0.00000600 cpu:cached=0.0000130 ) 
+    UID 2000: 0.0000250 cached: 0.0000200 ( cpu=0.0000250 cpu:cached=0.0000200 ) 
+    UID u0a208: 0.0000230 fg: 0.0000110 fgs: 0.00000100 ( cpu=0.0000230 cpu:fg=0.0000110 cpu:fgs=0.00000100 ) 
+    UID u0a159: 0.0000220 fg: 0.00000100 fgs: 0.00000400 cached: 0.0000140 ( cpu=0.0000220 cpu:fg=0.00000100 cpu:fgs=0.00000400 cpu:cached=0.0000140 ) 
+    UID u0a178: 0.0000200 fgs: 0.00000300 cached: 0.0000150 ( cpu=0.0000200 cpu:fgs=0.00000300 cpu:cached=0.0000150 ) 
+    UID u0a210: 0.0000170 fg: 0.00000100 cached: 0.0000140 ( cpu=0.0000170 cpu:fg=0.00000100 cpu:cached=0.0000140 ) 
+    UID 1041: 0.0000150 ( cpu=0.0000150 ) 
+    UID u0a201: 0.0000150 fg: 0.0000150 ( cpu=0.0000150 cpu:fg=0.0000150 ) 
+    UID u0a131: 0.0000120 fgs: 0.0000110 ( cpu=0.0000120 cpu:fgs=0.0000110 ) 
+    UID u0a130: 0.00001000 cached: 0.00000600 ( cpu=0.00001000 cpu:cached=0.00000600 ) 
+    UID u0a158: 0.00000900 fgs: 0.00000100 cached: 0.00000400 ( cpu=0.00000900 cpu:fgs=0.00000100 cpu:cached=0.00000400 ) 
+    UID 1066: 0.00000800 ( cpu=0.00000800 ) 
+    UID 1013: 0.00000700 ( cpu=0.00000700 ) 
+    UID 1040: 0.00000600 ( cpu=0.00000600 ) 
+    UID 1069: 0.00000600 ( cpu=0.00000600 ) 
+    UID 1073: 0.00000600 ( cpu=0.00000600 ) 
+    UID 1002: 0.00000400 fg: 0.00000400 ( cpu=0.00000400 cpu:fg=0.00000400 ) 
+    UID u0a91: 0.00000400 bg: 0.00000200 fgs: 0.00000200 ( cpu=0.00000400 cpu:bg=0.00000200 cpu:fgs=0.00000200 ) 
+    UID u0a134: 0.00000300 bg: 0.00000300 ( cpu=0.00000300 cpu:bg=0.00000300 ) 
+    UID 1017: 0.00000200 ( cpu=0.00000200 ) 
+    UID u0a95: 0.00000200 cached: 0.00000200 ( cpu=0.00000200 cpu:cached=0.00000200 ) 
+    UID u0a151: 0.00000200 cached: 0.00000200 ( cpu=0.00000200 cpu:cached=0.00000200 ) 
+    UID u0a167: 0.00000200 cached: 0.00000200 ( cpu=0.00000200 cpu:cached=0.00000200 ) 
+    UID 9999: 0.00000100 ( cpu=0.00000100 ) 
+    UID u0a96: 0.00000100 cached: 0.00000100 ( cpu=0.00000100 cpu:cached=0.00000100 ) 
+    UID u0a135: 0.00000100 cached: 0.00000100 ( cpu=0.00000100 cpu:cached=0.00000100 ) 
+    UID u0a195: 0.00000100 cached: 0.00000100 ( cpu=0.00000100 cpu:cached=0.00000100 ) 
+    UID u0a198: 0.00000100 fgs: 0.00000100 ( cpu=0.00000100 cpu:fgs=0.00000100 ) 
+    UID u0a202: 0.00000100 cached: 0.00000100 ( cpu=0.00000100 cpu:cached=0.00000100 ) 
+    UID u0a203: 0.00000100 ( cpu=0.00000100 ) 
+
+  Resource Power Manager Stats
+
+  CPU scaling:  policy0: 1 2 policy1: 1 2
+
+  1000:
+    Wake lock WiredAccessoryManager realtime
+    Wake lock *location*:GnssLocationProvider realtime
+    Wake lock *alarm* realtime
+    Wake lock *job*/com.android.settings/.sim.PrimarySubscriptionListChangedService realtime
+    Wake lock time_detector realtime
+    Wake lock AudioMix realtime
+    Wake lock *location*:PsdsDownload realtime
+    Wake lock *launch* realtime
+    Wake lock NetworkStats realtime
+    Wake lock Icing realtime
+    Wake lock *telephony-radio* realtime
+    Wake lock NotificationManagerService:post:android realtime
+    Wake lock NetworkTimeUpdateService realtime
+    Wake lock GnssVisibilityControl realtime
+    Wake lock *job*/android/com.android.server.notification.NotificationHistoryJobService realtime
+    Wake lock SyncLoopWakeLock realtime
+    Wake lock *job*/@SettingsProviderJobsNamespace@com.android.providers.settings/.WriteFallbackSettingsFilesJobService realtime
+    Job @SettingsProviderJobsNamespace@com.android.providers.settings/.WriteFallbackSettingsFilesJobService: (not used)
+    Job android/com.android.server.notification.NotificationHistoryJobService: (not used)
+    Job com.android.settings/.sim.PrimarySubscriptionListChangedService: (not used)
+    Sensor 0: (not used)
+    Apk com.android.location.fused:
+      (nothing executed)
+    Apk com.android.settings:
+      (nothing executed)
+    Apk com.android.emulator.multidisplay:
+      Service com.android.emulator.multidisplay.MultiDisplayService:
+        Created for: 0ms uptime
+        Starts: 1, launches: 1
+    Apk com.android.localtransport:
+      (nothing executed)
+    Apk com.android.keychain:
+      (nothing executed)
+    Apk com.android.server.telecom:
+      Service com.android.server.telecom.components.TelecomService:
+        Created for: 0ms uptime
+        Starts: 0, launches: 1
+    Apk com.android.providers.settings:
+      (nothing executed)
+    Apk android:
+      Service android.hardware.location.GeofenceHardwareService:
+        Created for: 0ms uptime
+        Starts: 0, launches: 1
+    Apk com.android.dynsystem:
+      (nothing executed)
+  u0a209:
+    Wake lock *vibrator* realtime
+    Wake lock *launch* realtime
+    Wake lock Icing realtime
+    Apk ai.nexus:
+      (nothing executed)
+
+Per process state tracking available: true
+Total cpu time reads: 4
+Batching Duration (min): 2
+All UID cpu time reads since the later of device start or stats reset: 44
+UIDs removed since the later of device start or stats reset: 0
+Currently mapped isolated uids:
+  1037->1000 (ref count = 1)
+  90000->10145 (ref count = 1)
+  90001->10145 (ref count = 1)
+  90002->10145 (ref count = 1)
+  90003->10145 (ref count = 1)
+  90004->10145 (ref count = 1)
+  90005->10145 (ref count = 1)
+  90006->10145 (ref count = 1)
+  99000->10159 (ref count = 1)
+  99001->10144 (ref count = 1)
+
+BatteryStats constants:
+    track_cpu_active_cluster_time=true
+    kernel_uid_readers_throttle_time=1000
+    external_stats_collection_rate_limit_ms=600000
+    battery_level_collection_delay_ms=300000
+    procstate_change_collection_delay_ms=60000
+    max_history_files=32
+    max_history_buffer_kb=128
+    battery_charged_delay_ms=900000
+    battery_charging_enforce_level=90
+    per_uid_modem_power_model=modem_activity_info_rx_tx
+    phone_on_external_stats_collection=true
+    reset_while_plugged_in_minimum_duration_hours=47
+
+CPU power brackets; cluster/freq in MHz(avg current in mA):
+    0: 0/0(0.0), 0/0(0.0), 1/0(0.0), 1/0(0.0)
+
+On-battery energy consumer stats (microcoulombs) 
+    global usage:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0, CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 1000:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 1001:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 1002:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 1027:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 1068:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 1073:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 2000:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10091:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10095:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10096:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10100:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10101:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10103:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10104:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10108:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10111:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10126:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10127:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10128:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10129:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10130:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10131:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10132:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10134:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10135:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10137:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10138:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10140:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10142:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10143:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10144:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10145:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10151:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10152:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10156:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10157:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10158:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10159:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10165:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10166:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10167:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10171:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10177:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10178:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10179:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10181:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10195:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10196:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10198:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10199:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10200:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10201:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10202:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10203:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10208:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10209:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+    uid 10210:
+           SCREEN_ON : -1 (unsupported), SCREEN_DOZE : -1 (unsupported), SCREEN_OTHER : -1 (unsupported), CPU : -1 (unsupported), WIFI : -1 (unsupported), BLUETOOTH : -1 (unsupported), GNSS : -1 (unsupported), MOBILE_RADIO : 0 [unspecified: 0 fg: 0 bg: 0 fgs: 0 cached: 0], CAMERA : -1 (unsupported), PHONE : 0, CUSTOM_0(GPU) : 0
+
+CPU wakeup stats:
+  Config:
+    wakeup_stats_retention_ms=+3d0h0m0s0ms
+    wakeup_matching_window_ms=+1s0ms
+    waking_activity_retention_ms=+5m0s0ms
+  
+  Irq device map:
+    Loaded from xml resource: 0x117000a
+    Map:
+      rtc0: [Alarm]
+  
+  Recent waking activity:
+    Subsystem Alarm:
+      -238ms: 1000 [PER ], 
+      -480ms: 1000 [PER ], 
+      -18s477ms: u0a143 [BTOP], 
+      -41s599ms: 1000 [PER ], 
+      -42s178ms: 1000 [PER ], 
+      -44s55ms: u0a143 [BFGS], 
+      -53s715ms: u0a143 [BFGS], 
+      -59s695ms: u0a143 [BTOP], 
+      -1m2s534ms: 1000 [PER ], 
+      -1m8s799ms: 1000 [PER ], 
+      -1m10s180ms: 1000 [PER ], 
+      -1m10s214ms: 1000 [PER ], 
+      -1m39s496ms: 1000 [PER ], 
+      -1m47s22ms: 1000 [PER ], 
+      -1m49s251ms: 1000 [PER ], 
+      -1m52s796ms: 1000 [PER ], 
+      -1m53s966ms: u0a143 [BFGS], 
+      -2m2s264ms: u0a101 [CEM ], 
+      -2m3s496ms: u0a143 [BFGS], 
+      -2m3s722ms: 1000 [PER ], 
+      -2m3s883ms: 1000 [PER ], 
+      -2m8s762ms: 1000 [PER ], 
+      -2m12s4ms: 1000 [PER ], 
+      -2m18s630ms: 1000 [PER ], 
+      -2m21s888ms: u0a181 [PER ], 
+      -2m27s237ms: 1000 [PER ], 
+      -2m28s608ms: 1000 [PER ], 
+      -2m29s621ms: 1000 [PER ], 
+      -2m31s353ms: 1000 [PER ], 
+  
+  Current proc-state map (67):
+    1000:PER , 1001:PER , 1002:PER , 1027:NONE, 1037:NONE, 1068:PER , 1073:PER , 2000:CEM , u0a91:LAST, u0a95:CEM , u0a96:CEM , u0a100:CEM , u0a101:CEM , u0a103:CEM , u0a104:CEM , u0a108:NONE, u0a111:CEM , u0a126:CEM , u0a127:NONE, u0a128:CEM , u0a129:CAC , u0a130:CEM , u0a131:CEM , u0a132:BFGS, u0a134:RCVR, u0a135:CEM , u0a137:CEM , u0a138:BFGS, u0a140:BFGS, u0a142:BFGS, u0a143:BFGS, u0a144:BFGS, u0a145:CACC, u0a151:CEM , u0a152:IMPB, u0a156:SVC , u0a157:CEM , u0a158:CEM , u0a159:CEM , u0a165:IMPF, u0a166:CAC , u0a167:CEM , u0a171:NONE, u0a177:BFGS, u0a178:CEM , u0a179:CEM , u0a181:PER , u0a195:CEM , u0a196:CEM , u0a198:BFGS, u0a199:CEM , u0a200:CEM , u0a201:PER , u0a202:CEM , u0a203:NONE, u0a208:IMPF, u0a209:TOP , u0a210:CEM , u0ai0:CEM , u0ai1:NONE, u0ai2:NONE, u0ai3:NONE, u0ai4:NONE, u0ai5:NONE, u0ai6:NONE, u0ai9000:NONE, u0i1:RCVR
+  
+  Wakeup events:
+  Attribution stats:
+    Total: 0
+

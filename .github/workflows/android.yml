@@ -1,0 +1,157 @@
+name: Android verification
+on: [push, workflow_dispatch]
+permissions: { contents: read }
+jobs:
+  device:
+    if: ${{ !contains(github.event.head_commit.message, '[publish-debug]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NEXUS_APK: build/candidate/JARVIS-NEXUS.apk
+      NEXUS_TEST_APK: build/candidate/NEXUS-TEST.apk
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+        if: ${{ !contains(github.event.head_commit.message, '[capture]') }}
+        with: { cache-read-only: false }
+      - name: Build application and device tests
+        env: { CAPTURE: "${{ contains(github.event.head_commit.message, '[capture]') }}" }
+        run: |
+          set -euo pipefail
+          mkdir -p build/device-evidence build/candidate
+          if [ "$CAPTURE" = true ]; then
+            # Deterministic SDK-only lane for signed capture candidates. Do not keep retrying Maven 429s.
+            export BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+            if [ ! -s "$ANDROID_HOME/platforms/android-36/android.jar" ] || [ ! -x "$BUILD_TOOLS/d8" ]; then sdkmanager 'platforms;android-36' 'build-tools;35.0.0'; fi
+            { echo 'Build lane: Android SDK 36 / Build Tools 35.0.0 / JDK 17'; java -version; scripts/sdk-build.sh; scripts/test-core.sh; scripts/sdk-device-tests.sh; } 2>&1 | tee build/device-evidence/compile.txt
+            cp build/sdk-debug/JARVIS-NEXUS.apk "$NEXUS_APK"; cp build/sdk-test/NEXUS-TEST.apk "$NEXUS_TEST_APK"
+          else
+            ./gradlew --console=plain testDebugUnitTest assembleDebug assembleDebugAndroidTest >build/device-evidence/compile.txt 2>&1 || { tail -80 build/device-evidence/compile.txt; exit 1; }
+            cp app/build/outputs/apk/debug/app-debug.apk "$NEXUS_APK"; cp app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk "$NEXUS_TEST_APK"
+          fi
+      - name: Public provider failure path and optional authenticated function probe
+        env:
+          JARVIS_TEST_GEMINI_API_KEY: ${{ secrets.JARVIS_TEST_GEMINI_API_KEY }}
+        run: python3 scripts/provider-check.py
+      - name: Gateway authorization and budget tests
+        run: node --test gateway/security.test.mjs
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 35
+          emulator-boot-timeout: 300
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/device-test.sh
+      - name: Verify signature and collect binary
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$NEXUS_APK" >build/device-evidence/signature.txt
+          cp "$NEXUS_APK" build/device-evidence/JARVIS-NEXUS.apk
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with: { name: nexus-device-evidence, path: build/device-evidence/, retention-days: 14 }
+  compatibility:
+    if: contains(github.event.head_commit.message, '[capture]')
+    needs: device
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: { api: [26, 36] }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: nexus-device-evidence, path: build/input }
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules; sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: ${{ matrix.api }}
+          emulator-boot-timeout: 300
+          arch: x86_64
+          target: google_apis
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: python3 scripts/smoke-device.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with: { name: 'compat-${{ matrix.api }}', path: 'build/compat-${{ matrix.api }}/', retention-days: 14 }
+  # Only a maintainer's explicit capture commit on this delivery branch may publish evidence.
+  # Tests have no repository write token. Never force-push or replace newer work.
+  capture:
+    if: always() && github.ref == 'refs/heads/arena/f3d47646-android-jarvis' && contains(github.event.head_commit.message, '[capture]')
+    needs: [device, compatibility]
+    permissions: { contents: write }
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: nexus-device-evidence, path: build/captured }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { pattern: 'compat-*', path: build/compat-results }
+      - name: Preserve emulator evidence on the delivery branch
+        env: { DEVICE_RESULT: '${{ needs.device.result }}', COMPAT_RESULT: '${{ needs.compatibility.result }}' }
+        run: |
+          if [ "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" != "$GITHUB_SHA" ]; then echo 'Newer source exists; not publishing stale evidence.'; exit 0; fi
+          if [ "$DEVICE_RESULT" = success ] && [ "$COMPAT_RESULT" = success ]; then
+            dest=docs/evidence/android
+            mkdir -p delivery; mv build/captured/JARVIS-NEXUS.apk delivery/; git add -f delivery/JARVIS-NEXUS.apk
+          else
+            # A failed candidate must not displace the existing APK OR its matching evidence.
+            dest=docs/evidence/last-failure
+            rm -f build/captured/JARVIS-NEXUS.apk
+          fi
+          mkdir -p "$dest"; rm -f "$dest"/*
+          cp build/captured/* "$dest"/
+          for path in build/compat-results/compat-*/result.json; do if [ -f "$path" ]; then cp "$path" "$dest/$(basename "$(dirname "$path")").json"; fi; done
+          printf 'Source: %s\nRun: https://github.com/%s/actions/runs/%s\nDevice job: %s\nCompatibility jobs: %s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$DEVICE_RESULT" "$COMPAT_RESULT" > "$dest/run-source.txt"
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dest"; git commit -m "Record Android device evidence for ${GITHUB_SHA:0:8}"; git push origin "HEAD:$GITHUB_REF_NAME"
+
+  publish-debug:
+    # Attach an already tested, already tagged debug binary. Never rebuild, re-sign, overwrite
+    # an existing asset, create a tag, or accept an arbitrary upload destination or artifact URL.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/arena/f3d47646-android-jarvis' && contains(github.event.head_commit.message, '[publish-debug]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with: { distribution: temurin, java-version: '17' }
+      - name: Verify immutable tag, signed APK and all three installed-device proofs
+        run: |
+          set -euo pipefail
+          tag=v1.0.0-debug.1
+          git diff --exit-code "$tag" -- delivery app build.gradle settings.gradle gradle gradlew gradle.properties scripts/sdk-build.sh docs/evidence/android
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0" bash scripts/verify-delivery.sh
+      - name: Publish debug assets and independently download the public file
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          set -euo pipefail
+          tag=v1.0.0-debug.1; repo="$GITHUB_REPOSITORY"
+          gh api "repos/$repo/releases/tags/$tag" > /tmp/release-info.json
+          jq -e '.prerelease == true and .draft == false' /tmp/release-info.json >/dev/null
+          mkdir -p build/release-assets build/read-back
+          cp delivery/JARVIS-NEXUS.apk build/release-assets/
+          (cd build/release-assets && sha256sum JARVIS-NEXUS.apk > SHA256SUMS.txt)
+          for f in JARVIS-NEXUS.apk SHA256SUMS.txt; do
+            if ! jq -e --arg f "$f" '.assets[] | select(.name==$f)' /tmp/release-info.json >/dev/null; then
+              gh release upload "$tag" "build/release-assets/$f" --repo "$repo"
+            fi
+            # No token/cookies for this GET: exercise exactly the public browser download link.
+            curl --fail --silent --show-error --location --proto '=https' --max-time 60 --retry 2 "https://github.com/$repo/releases/download/$tag/$f" --output "build/read-back/$f"
+            cmp "build/release-assets/$f" "build/read-back/$f"
+          done
+          (cd build/read-back && sha256sum -c SHA256SUMS.txt)
+          echo "Public APK read-back matched the tested file: $(sha256sum delivery/JARVIS-NEXUS.apk | cut -d' ' -f1)" >> "$GITHUB_STEP_SUMMARY"

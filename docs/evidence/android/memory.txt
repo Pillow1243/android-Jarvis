@@ -1,0 +1,58 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 190683 Realtime: 190683
+
+** MEMINFO in pid 5449 [ai.nexus] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    15200    15156       32       40    16156    28924    22963     1988
+  Dalvik Heap     1625     1544       60      132     2364     4858     2429     2429
+ Dalvik Other     5574     1556        0        1     9940                           
+        Stack      648      648        0        0      656                           
+       Ashmem       10        0        0        0      576                           
+    Other dev       22        8        8        0      328                           
+     .so mmap     3980      156     2512        7    30948                           
+    .jar mmap     3490        0     1520        0    40904                           
+    .apk mmap    36075        0    13504        0   102492                           
+    .ttf mmap      329        0      280        0      616                           
+    .dex mmap        8        0        0        0      864                           
+    .oat mmap       20        0        0        0     1664                           
+    .art mmap    10017     7864     1748       80    23464                           
+   Other mmap     2169       36      132        0     4972                           
+      Unknown      488      468       12        3      928                           
+        TOTAL    79918    27436    19808      263   236872    33782    25392     4417
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    11156                          25828
+         Native Heap:    15156                          16156
+                Code:    18536                         186084
+               Stack:      648                            656
+            Graphics:        0                              0
+       Private Other:     1748
+              System:    32674
+             Unknown:                                    8148
+ 
+           TOTAL PSS:    79918            TOTAL RSS:   236872       TOTAL SWAP PSS:      263
+ 
+ Objects
+               Views:      126         ViewRootImpl:        1
+         AppContexts:        6           Activities:        1
+              Assets:       41        AssetManagers:        0
+       Local Binders:       14        Proxy Binders:       56
+       Parcel memory:        5         Parcel count:       20
+    Death Recipients:        0             WebViews:        0
+ 
+ SQL
+         MEMORY_USED:      178
+  PAGECACHE_OVERFLOW:       50          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4       56             57     3    21     4  /data/user/0/ai.nexus/databases/nexus.db
+         4       56             42     2    17     3  /data/user/0/ai.nexus/databases/nexus.db (1)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+              5            40            45  /data/user/0/ai.nexus/databases/nexus.db

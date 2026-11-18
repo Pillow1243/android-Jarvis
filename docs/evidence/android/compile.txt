@@ -1,0 +1,19 @@
+Build lane: Android SDK 36 / Build Tools 35.0.0 / JDK 17
+openjdk version "17.0.21" 2026-10-20
+OpenJDK Runtime Environment Temurin-17.0.21+9 (build 17.0.21+9)
+OpenJDK 64-Bit Server VM Temurin-17.0.21+9 (build 17.0.21+9, mixed mode, sharing)
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Generating 2,048 bit RSA key pair and self-signed certificate (SHA256withRSA) with a validity of 10,000 days
+	for: CN=Android Debug, O=Android, C=US
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+cdd3b85458b5b5149095048b1b294c1ddec4c461c9adeef0fab7ef18ae5f9848  build/sdk-debug/JARVIS-NEXUS.apk
+PASS: 50 host checks
+cb1e5ddf4597c22f28e40eaa80fc113da6a34b34ae6481fb2685035331b1b912  build/sdk-test/NEXUS-TEST.apk

@@ -1,0 +1,1 @@
+<resources><style name="NexusTheme" parent="NexusBase"><item name="android:windowSplashScreenBackground">@color/launcher_bg</item><item name="android:windowSplashScreenAnimatedIcon">@drawable/nexus_mark</item></style></resources>

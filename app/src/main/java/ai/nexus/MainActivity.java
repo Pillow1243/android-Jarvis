@@ -1,0 +1,750 @@
+package ai.nexus;
+
+import ai.nexus.agent.Agent;
+import ai.nexus.ai.*;
+import ai.nexus.core.*;
+import ai.nexus.device.AppIndex;
+import ai.nexus.memory.Store;
+import ai.nexus.security.KeyVault;
+import ai.nexus.tools.ToolBox;
+import ai.nexus.ui.*;
+import ai.nexus.voice.Voice;
+import android.Manifest;
+import android.app.*;
+import android.content.*;
+import android.content.pm.PackageManager;
+import android.graphics.*;
+import android.net.Uri;
+import android.os.*;
+import android.provider.Settings;
+import android.text.*;
+import android.view.*;
+import android.view.inputmethod.EditorInfo;
+import android.widget.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
+
+public final class MainActivity extends Activity implements Agent.UI, Voice.Listener {
+
+  public Kit k;
+  public Store db;
+  public KeyVault vault;
+  public ToolBox tools;
+  public Gemini gemini;
+  public Agent agent;
+  public Voice voice;
+  public Console screens;
+  public Controls controls;
+  public String tab = "home",
+    voiceState = "idle",
+    partial = "",
+    notice = "";
+  public boolean fa, active, validating, conversation, spokenInput;
+  public List<AppIndex.App> apps = Collections.emptyList();
+  public boolean indexed;
+  public final ExecutorService worker = Executors.newSingleThreadExecutor();
+  public final Handler main = new Handler(Looper.getMainLooper());
+  private LinearLayout root, nav, header, body;
+  private ScrollView scroll;
+  private Dialog gate;
+  private Consumer<Boolean> permissionCb;
+  private boolean redrawQueued;
+  private int y;
+  private boolean resumedOnce, lowRam;
+  private String chromeKey = "";
+  private final Runnable releaseLayer = () -> {
+    if (body != null && body.getLayerType() != View.LAYER_TYPE_NONE) body.setLayerType(
+      View.LAYER_TYPE_NONE,
+      null
+    );
+  };
+  private String exportJson;
+
+  @Override
+  protected void onCreate(Bundle b) {
+    super.onCreate(b);
+    if (Build.VERSION.SDK_INT >= 33) getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+      android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+      this::handleBack
+    );
+    db = ((NexusApp) getApplication()).store;
+    k = new Kit(this);
+    vault = new KeyVault(this);
+    tools = new ToolBox();
+    gemini = new Gemini(db, vault);
+    agent = new Agent(this, db, tools, gemini);
+    voice = new Voice(this, this);
+    screens = new Console(this);
+    controls = new Controls(this);
+    if (b != null) tab = b.getString("page", "home");
+    locale();
+    structure();
+    render(false);
+    index();
+  }
+
+  public void locale() {
+    String lang = db.prefs.getString("language", "auto");
+    String device = Locale.getDefault().getLanguage();
+    fa = lang.equals("fa") || (lang.equals("auto") && !device.equals("en"));
+    k.rtl = fa;
+    k.theme(db.prefs.getString("theme", "Forest").equals("Midnight"));
+  }
+
+  public void index() {
+    worker.execute(() -> {
+      List<AppIndex.App> list = AppIndex.scan(this);
+      main.post(() -> {
+        if (!isDestroyed()) {
+          apps = list;
+          indexed = true;
+          if (!tab.equals("home")) changed();
+        }
+      });
+    });
+  }
+
+  private void structure() {
+    root = k.col();
+    root.setFocusableInTouchMode(true);
+    root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+      if (or > ol && r - l != or - ol) changed();
+    });
+    root.setOnApplyWindowInsetsListener((v, in) -> {
+      if (Build.VERSION.SDK_INT >= 30) {
+        android.graphics.Insets i = in.getInsets(
+          WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime()
+        );
+        v.setPadding(i.left, i.top, i.right, i.bottom);
+      } else v.setPadding(
+        in.getSystemWindowInsetLeft(),
+        in.getSystemWindowInsetTop(),
+        in.getSystemWindowInsetRight(),
+        in.getSystemWindowInsetBottom()
+      );
+      return in.consumeSystemWindowInsets();
+    });
+    getWindow()
+      .getDecorView()
+      .setSystemUiVisibility(
+        View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+          View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+          View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+      );
+    setContentView(root);
+    header = k.row();
+    k.add(root, header, -1, 56);
+    scroll = new ScrollView(this);
+    scroll.setVerticalScrollBarEnabled(false);
+    scroll.setFillViewport(true);
+    root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+    body = k.col();
+    scroll.addView(body);
+    lowRam = getSystemService(ActivityManager.class).isLowRamDevice();
+    // During scroll a settled Home can be composited as one texture rather than repainted per row.
+    // Bound both dimensions and bytes; never keep an idle allocation or cache dynamic voice output.
+    scroll.setOnScrollChangeListener((v, x, sy, oldX, oldY) -> {
+      if (
+        lowRam ||
+        !tab.equals("home") ||
+        !active ||
+        !voiceState.equals("idle") ||
+        agent.running ||
+        !v.isHardwareAccelerated()
+      ) return;
+      int w = body.getWidth(),
+        h = body.getHeight();
+      if (w <= 0 || h <= 0 || w > 4096 || h > 4096 || (long) w * h * 4 > 16 * 1024 * 1024) return;
+      if (body.getLayerType() != View.LAYER_TYPE_HARDWARE) body.setLayerType(
+        View.LAYER_TYPE_HARDWARE,
+        null
+      );
+      main.removeCallbacks(releaseLayer);
+      main.postDelayed(releaseLayer, 300);
+    });
+    nav = k.row();
+    k.add(root, nav, -1, 60);
+  }
+
+  public String tr(String en, String f) {
+    return fa ? f : en;
+  }
+
+  public String tag() {
+    return fa ? "fa-IR" : "en-US";
+  }
+
+  public Activity activity() {
+    return this;
+  }
+
+  public boolean foreground() {
+    return active && !isFinishing() && !isDestroyed();
+  }
+
+  public boolean motion() {
+    return db.prefs.getBoolean("motion", true);
+  }
+
+  public void page(String id) {
+    if (!Arrays.asList("home", "agent", "activity", "tools", "memory", "settings").contains(id)) return;
+    tab = id;
+    y = 0;
+    render(true);
+    scroll.scrollTo(0, 0);
+  }
+
+  public void render(boolean animate) {
+    if (isDestroyed()) return;
+    locale();
+    root.setLayoutDirection(fa ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+    root.setBackgroundColor(k.bg);
+    getWindow().setStatusBarColor(k.bg);
+    getWindow().setNavigationBarColor(k.bg);
+    String chrome =
+      tab +
+      ":" +
+      fa +
+      ":" +
+      k.bg +
+      ":" +
+      gemini.configured() +
+      ":" +
+      db.prefs.getBoolean("verified", false) +
+      ":" +
+      getResources().getDisplayMetrics().densityDpi +
+      ":" +
+      getResources().getConfiguration().fontScale;
+    if (!chromeKey.equals(chrome)) {
+      chromeKey = chrome;
+      chrome();
+    }
+    releaseLayer.run();
+    body.removeAllViews();
+    int width = scroll.getWidth() > 0
+      ? scroll.getWidth()
+      : getResources().getDisplayMetrics().widthPixels;
+    int gutter = Math.max(18, (int) ((width / getResources().getDisplayMetrics().density - 660) / 2));
+    k.pad(body, gutter, 13, gutter, 22);
+    screens.draw(body, tab);
+    if (animate && motion()) {
+      body.setAlpha(.78f);
+      body.setTranslationY(k.d(5));
+      body.animate().alpha(1).translationY(0).setDuration(150).start();
+    }
+  }
+
+  private void chrome() {
+    header.removeAllViews();
+    nav.removeAllViews();
+    k.pad(header, 20, 4, 16, 4);
+    ImageView mark = new ImageView(this);
+    mark.setImageResource(R.drawable.nexus_mark);
+    k.add(header, mark, 32, 32);
+    k.gap(header, 9);
+    LinearLayout brand = k.col();
+    TextView word = k.text("JARVIS NEXUS", 15, k.ink, 1);
+    word.setLetterSpacing(.095f);
+    k.add(brand, word, -1, -2);
+    k.gap(brand, 3);
+    k.add(brand, k.text("PERSONAL INTELLIGENCE", 8, k.muted, 2), -1, -2);
+    k.weight(header, brand, -2);
+    TextView status = k.badge(
+      gemini.configured()
+        ? (db.prefs.getBoolean("verified", false) ? "● GEMINI" : "◇ GEMINI")
+        : tr("● LOCAL", "● محلی"),
+      gemini.configured() ? Kit.TEAL : Kit.LIME
+    );
+    k.tap(status, () -> controls.provider(), tr("Gemini configuration", "پیکربندی جمینای"));
+    k.add(header, status, -2, -2);
+    k.gap(header, 8);
+    FrameLayout cog = k.glyph("sliders_horizontal", k.sub, 38, 18);
+    k.tap(cog, () -> page("settings"), tr("Settings", "تنظیمات"));
+    k.add(header, cog, 40, 40);
+    k.pad(nav, 5, 3, 5, 3);
+    k.box(nav, k.card, 0, k.line);
+    String[] names = { "home", "agent", "activity", "tools", "memory" },
+      icons = { "house", "orbit", "activity", "layout_grid", "database" },
+      en = { "Home", "Agent", "Activity", "Tools", "Memory" },
+      pe = { "خانه", "عامل", "فعالیت", "ابزارها", "حافظه" };
+    for (int i = 0; i < names.length; i++) {
+      String id = names[i],
+        n = tr(en[i], pe[i]);
+      boolean selected = tab.equals(id);
+      LinearLayout slot = k.col();
+      slot.setGravity(Gravity.CENTER);
+      FrameLayout well = new FrameLayout(this);
+      if (selected) k.box(well, Kit.shade(Kit.LIME, 23), 12, 0);
+      well.addView(
+        k.icon(icons[i], selected ? Kit.LIME : k.muted),
+        new FrameLayout.LayoutParams(k.d(19), k.d(19), Gravity.CENTER)
+      );
+      k.add(slot, well, 44, 27);
+      k.gap(slot, 3);
+      TextView txt = k.text(n, 10, selected ? Kit.LIME : k.sub, selected ? 1 : 0);
+      k.add(slot, txt, -2, -2);
+      k.tap(slot, () -> page(id), "nav_" + id);
+      k.weight(nav, slot, 51);
+    }
+  }
+
+  public void changed() {
+    if (redrawQueued || isDestroyed() || isFinishing()) return;
+    redrawQueued = true;
+    main.postDelayed(
+      () -> {
+        redrawQueued = false;
+        if (!isDestroyed() && !isFinishing()) {
+          y = scroll.getScrollY();
+          render(false);
+          scroll.scrollTo(0, y);
+        }
+      },
+      42
+    );
+  }
+
+  public void info(String title, String text) {
+    Kit.Sheet s = k.new Sheet(title);
+    s.note(text);
+    s.action(tr("Close", "بستن"), true, s::close);
+    s.show();
+  }
+
+  public void approval(String title, String exact, Consumer<Boolean> cb) {
+    Kit.Sheet s = k.new Sheet(title);
+    s.note(
+      tr(
+        "Review the exact action. Nothing is sent or submitted automatically.",
+        "اقدام دقیق را بررسی کنید. هیچ چیزی خودکار ارسال یا ثبت نمی‌شود."
+      )
+    );
+    TextView preview = k.text(exact, 17, k.ink, 0);
+    k.box(preview, k.bg, 12, k.line);
+    k.pad(preview, 14, 13, 14, 13);
+    k.add(s.body, preview, -1, -2);
+    k.gap(s.body, 14);
+    s.action(tr("Approve action", "تأیید اقدام"), true, () -> {
+      s.close();
+      cb.accept(true);
+    });
+    s.action(tr("Decline", "رد کردن"), false, () -> {
+      s.close();
+      cb.accept(false);
+    });
+    s.dialog.setOnCancelListener(d -> cb.accept(false));
+    gate = s.dialog;
+    s.show();
+  }
+
+  public void pick(String title, List<String> opts, Consumer<Integer> cb) {
+    Kit.Sheet s = k.new Sheet(title);
+    for (int i = 0; i < opts.size(); i++) {
+      final int index = i;
+      s.action(opts.get(i), false, () -> {
+        s.close();
+        cb.accept(index);
+      });
+    }
+    s.action(tr("Cancel", "انصراف"), false, () -> {
+      s.close();
+      cb.accept(-1);
+    });
+    s.dialog.setOnCancelListener(d -> cb.accept(-1));
+    gate = s.dialog;
+    s.show();
+  }
+
+  public void dismissGate() {
+    if (gate != null && gate.isShowing()) gate.dismiss();
+    gate = null;
+  }
+
+  public void permission(String p, Consumer<Boolean> cb) {
+    if (checkSelfPermission(p) == PackageManager.PERMISSION_GRANTED) {
+      cb.accept(true);
+      return;
+    }
+    if (permissionCb != null) {
+      cb.accept(false);
+      return;
+    }
+    Kit.Sheet s = k.new Sheet(tr("Permission request", "درخواست مجوز"));
+    String why = p.equals(Manifest.permission.READ_CONTACTS)
+      ? tr(
+        "Read names and phone numbers only for this lookup. Matches stay on the device.",
+        "خواندن نام و شماره فقط برای این جست‌وجو؛ نتایج روی دستگاه می‌مانند."
+      )
+      : p.equals(Manifest.permission.RECORD_AUDIO)
+        ? tr(
+          "Use the microphone only during a visible voice session. Your speech service may use its network.",
+          "میکروفون فقط هنگام جلسهٔ گفتاری فعال است. سرویس گفتار ممکن است از شبکه استفاده کند."
+        )
+        : tr(
+          "Post your scheduled reminders. Android may deliver them later to save battery.",
+          "نمایش یادآورهای شما؛ اندروید ممکن است برای صرفه‌جویی در باتری آن‌ها را دیرتر نمایش دهد."
+        );
+    s.note(why);
+    s.action(tr("Continue to Android", "ادامه در اندروید"), true, () -> {
+      s.close();
+      permissionCb = cb;
+      requestPermissions(new String[] { p }, 91);
+    });
+    s.action(tr("Not now", "فعلاً نه"), false, () -> {
+      s.close();
+      cb.accept(false);
+    });
+    s.dialog.setOnCancelListener(d -> cb.accept(false));
+    gate = s.dialog;
+    s.show();
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int req, String[] perms, int[] results) {
+    super.onRequestPermissionsResult(req, perms, results);
+    if (req == 91 && permissionCb != null) {
+      Consumer<Boolean> cb = permissionCb;
+      permissionCb = null;
+      cb.accept(results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED);
+      changed();
+    }
+  }
+
+  public void command(String seed) {
+    if (agent.running) {
+      page("agent");
+      return;
+    }
+    voice.stop();
+    Kit.Sheet s = k.new Sheet(tr("Command input", "ورودی فرمان"));
+    s.note(
+      tr(
+        "Write in English or Persian. Separate steps with “then”.",
+        "فارسی یا انگلیسی بنویسید. مراحل را با «و بعد» جدا کنید."
+      )
+    );
+    EditText e = k.input(tr("What should I do?", "چه کاری انجام بدهم؟"), seed, true);
+    e.setContentDescription("command_text");
+    k.add(s.body, e, -1, -2);
+    k.gap(s.body, 12);
+    Runnable send = () -> {
+      String q = e.getText().toString().trim();
+      if (q.isEmpty()) {
+        e.setError(tr("Enter a command", "یک فرمان بنویسید"));
+        return;
+      }
+      s.close();
+      submit(q, false);
+    };
+    s.action(tr("Run command", "اجرای فرمان"), true, send);
+    s.action(tr("Cancel", "انصراف"), false, s::close);
+    s.show();
+    e.requestFocus();
+    e.setSelection(e.length());
+  }
+
+  public void submit(String text, boolean spoken) {
+    if (validating) {
+      toast(tr("Wait for the provider check.", "منتظر بررسی اتصال بمانید."));
+      return;
+    }
+    notice = "";
+    partial = "";
+    spokenInput = spoken;
+    agent.submit(text, gemini.configured());
+  }
+
+  public void run(Call c) {
+    if (agent.running || validating) {
+      toast(
+        tr("Finish or cancel the current operation first.", "ابتدا عملیات فعلی را تمام یا لغو کنید.")
+      );
+      return;
+    }
+    notice = "";
+    voice.stop();
+    spokenInput = false;
+    agent.direct(c);
+  }
+
+  public void toolForm(Spec spec) {
+    if (agent.running) {
+      page("agent");
+      return;
+    }
+    if (spec.fields.isEmpty()) {
+      run(new Call(spec.id));
+      return;
+    }
+    Kit.Sheet s = k.new Sheet(tr(spec.title, spec.fa));
+    s.note(screens.description(spec));
+    Map<String, EditText> inputs = new LinkedHashMap<>();
+    Map<String, String> chosen = new HashMap<>();
+    for (Map.Entry<String, String> field : spec.fields.entrySet()) {
+      String key = field.getKey(),
+        hint = field.getValue();
+      k.add(s.body, k.text(screens.field(key), 12, k.sub, 1), -1, -2);
+      k.gap(s.body, 5);
+      if (hint.startsWith("|")) {
+        String[] vs = hint.substring(1).split("\\|");
+        TextView sel = k.button(vs[0] + "   ▾", false, () -> {});
+        chosen.put(key, vs[0]);
+        k.tap(
+          sel,
+          () ->
+            pick(screens.field(key), Arrays.asList(vs), idx -> {
+              if (idx >= 0) {
+                chosen.put(key, vs[idx]);
+                sel.setText(vs[idx] + "   ▾");
+              }
+            }),
+          key
+        );
+        k.add(s.body, sel, -1, -2);
+      } else {
+        EditText e = k.input(key.equals("time") ? "HH:mm" : screens.field(key), "", key.equals("text"));
+        e.setContentDescription("field_" + key);
+        if (key.equals("time")) {
+          Calendar cal = Calendar.getInstance();
+          cal.add(Calendar.MINUTE, 1);
+          e.setText(
+            String.format(
+              Locale.ROOT,
+              "%02d:%02d",
+              cal.get(Calendar.HOUR_OF_DAY),
+              cal.get(Calendar.MINUTE)
+            )
+          );
+          e.setFocusable(false);
+          e.setOnClickListener(v ->
+            new TimePickerDialog(
+              this,
+              (view, h, m) -> e.setText(String.format(Locale.ROOT, "%02d:%02d", h, m)),
+              cal.get(Calendar.HOUR_OF_DAY),
+              cal.get(Calendar.MINUTE),
+              true
+            ).show()
+          );
+        }
+        k.add(s.body, e, -1, -2);
+        inputs.put(key, e);
+      }
+      k.gap(s.body, 11);
+    }
+    s.action(tr("Continue", "ادامه"), true, () -> {
+      ArrayList<String> kv = new ArrayList<>();
+      for (String key : spec.fields.keySet()) {
+        String value = inputs.containsKey(key)
+          ? inputs.get(key).getText().toString().trim()
+          : chosen.get(key);
+        kv.add(key);
+        kv.add(value);
+      }
+      Call c = new Call(spec.id, kv.toArray(new String[0]));
+      if (spec.validate(c) != null) {
+        toast(tr("Check each required field.", "همهٔ فیلدهای لازم را بررسی کنید."));
+        return;
+      }
+      s.close();
+      run(c);
+    });
+    s.show();
+  }
+
+  public void microphone() {
+    if (agent.running) {
+      agent.cancel();
+      voice.stop();
+      conversation = false;
+      return;
+    }
+    if (voice.listening || voice.speaking) {
+      conversation = false;
+      voice.stop();
+      changed();
+      return;
+    }
+    permission(Manifest.permission.RECORD_AUDIO, ok -> {
+      if (ok) {
+        main.postDelayed(
+          () -> {
+            if (foreground()) {
+              notice = "";
+              conversation = db.prefs.getBoolean("continuous", false);
+              voice.listen(tag());
+            }
+          },
+          160
+        );
+      } else error(
+        "Microphone permission denied. Text input is available.",
+        "مجوز میکروفون داده نشد؛ می‌توانید متن وارد کنید."
+      );
+    });
+  }
+
+  public void state(String s) {
+    voiceState = s;
+    if (s.equals("idle")) partial = "";
+    changed();
+  }
+
+  public void audio(float rms, String text) {
+    partial = text;
+    screens.audio(rms, text);
+  }
+
+  public void result(String text, boolean review) {
+    if (!foreground()) return;
+    if (review) {
+      conversation = false;
+      command(text);
+    } else submit(text, true);
+  }
+
+  public void error(String en, String f) {
+    notice = tr(en, f);
+    conversation = false;
+    voiceState = "idle";
+    changed();
+  }
+
+  public void done(String text) {
+    if (spokenInput && foreground() && !agent.stage.equals("cancelled")) {
+      spokenInput = false;
+      if (db.prefs.getBoolean("speak", true)) {
+        String tag = Text.fa(text) ? "fa-IR" : "en-US";
+        voice.speak(text, tag, db.prefs.getString("voice_" + tag, ""), db.prefs.getFloat("speed", 1f));
+      } else utteranceDone();
+    }
+  }
+
+  public void utteranceDone() {
+    if (conversation && foreground()) main.postDelayed(
+      () -> {
+        if (conversation && foreground() && !agent.running) voice.listen(tag());
+      },
+      350
+    );
+  }
+
+  public void toast(String s) {
+    Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+  }
+
+  public void androidPage(Intent i) {
+    try {
+      startActivity(i);
+    } catch (ActivityNotFoundException | SecurityException e) {
+      toast(tr("No supported system interface.", "رابط سیستم در دسترس نیست."));
+    }
+  }
+
+  public void export() {
+    approval(
+      tr("Export local data", "صدور داده‌های محلی"),
+      tr(
+        "Includes saved notes, shortcuts and redacted task history, not keys or contacts. Choose a trusted destination.",
+        "شامل یادداشت، میان‌بر و تاریخچهٔ بدون جزئیات خصوصی است. کلید یا مخاطبان صادر نمی‌شوند."
+      ),
+      ok -> {
+        if (ok) {
+          exportJson = db.exportData().toString();
+          try {
+            startActivityForResult(
+              new Intent(Intent.ACTION_CREATE_DOCUMENT)
+                .setType("application/json")
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .putExtra(Intent.EXTRA_TITLE, "nexus-export.json"),
+              93
+            );
+          } catch (ActivityNotFoundException e) {
+            exportJson = null;
+            toast(tr("No document provider.", "فایل‌منیجر در دسترس نیست."));
+          }
+        }
+      }
+    );
+  }
+
+  @Override
+  protected void onActivityResult(int r, int result, Intent data) {
+    super.onActivityResult(r, result, data);
+    if (r == 93) {
+      String payload = exportJson;
+      exportJson = null;
+      if (result == RESULT_OK && payload != null && data != null && data.getData() != null) {
+        try (java.io.OutputStream out = getContentResolver().openOutputStream(data.getData(), "wt")) {
+          if (out == null) throw new java.io.IOException();
+          out.write(payload.getBytes(StandardCharsets.UTF_8));
+          toast(tr("Export written.", "فایل صادر شد."));
+        } catch (Exception e) {
+          toast(tr("Export failed.", "صدور فایل ناموفق بود."));
+        }
+      }
+    }
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle b) {
+    super.onSaveInstanceState(b);
+    b.putString("page", tab);
+  }
+
+  @Override
+  public void onConfigurationChanged(android.content.res.Configuration c) {
+    super.onConfigurationChanged(c);
+    changed();
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    active = true;
+    if (agent != null) {
+      agent.foregrounded();
+      if (resumedOnce) changed();
+      resumedOnce = true;
+    }
+  }
+
+  @Override
+  protected void onPause() {
+    active = false;
+    releaseLayer.run();
+    conversation = false;
+    spokenInput = false;
+    if (voice != null) voice.stop();
+    super.onPause();
+  }
+
+  @Override
+  protected void onDestroy() {
+    active = false;
+    agent.close();
+    gemini.cancel();
+    worker.shutdownNow();
+    voice.close();
+    main.removeCallbacksAndMessages(null);
+    super.onDestroy();
+  }
+
+  @Override
+  public void onBackPressed() {
+    handleBack();
+  }
+
+  private void handleBack() {
+    if (!tab.equals("home")) page("home");
+    else if (agent.running) approval(
+      tr("Stop task?", "توقف وظیفه؟"),
+      tr("No unfinished action will be replayed.", "اقدام ناتمام تکرار نمی‌شود."),
+      ok -> {
+        if (ok) agent.cancel();
+      }
+    );
+    else finishAfterTransition();
+  }
+}

@@ -1,0 +1,773 @@
+package ai.nexus.ui;
+
+import ai.nexus.MainActivity;
+import ai.nexus.accessibility.WindowReceiptService;
+import ai.nexus.ai.Gemini;
+import ai.nexus.core.*;
+import ai.nexus.device.AppIndex;
+import ai.nexus.memory.Store;
+import android.Manifest;
+import android.content.*;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.*;
+import android.provider.Settings;
+import android.text.*;
+import android.view.*;
+import android.widget.*;
+import java.util.*;
+import java.util.function.Consumer;
+
+public final class Controls {
+
+  private final MainActivity a;
+  private final Kit k;
+  private final Store db;
+
+  public Controls(MainActivity a) {
+    this.a = a;
+    k = a.k;
+    db = a.db;
+  }
+
+  private String t(String x, String y) {
+    return a.tr(x, y);
+  }
+
+  public String cloudStatus() {
+    return a.validating
+      ? t("Checking model and function calling…", "بررسی مدل و فراخوانی ابزار…")
+      : a.gemini.managed() && !a.gemini.configured()
+        ? t("Managed session expired", "جلسهٔ مدیریت‌شده منقضی شده")
+        : !a.gemini.configured()
+          ? t("Not configured · local tools ready", "پیکربندی نشده · ابزارهای محلی آماده")
+          : db.prefs.getBoolean("verified", false)
+            ? t("Last check passed · ", "آخرین بررسی موفق · ") + a.gemini.model()
+            : t("Key stored · not verified", "کلید ذخیره شده · بررسی نشده");
+  }
+
+  public void draw(LinearLayout v) {
+    a.screens.heading(
+      v,
+      "PREFERENCES   /   06",
+      t("Control room", "اتاق کنترل"),
+      t("Intelligence, voice and trust settings.", "تنظیمات هوش، صدا و اعتماد.")
+    );
+    k.item(
+      v,
+      "brain_circuit",
+      Kit.LIME,
+      t("Gemini provider", "ارائه‌دهندهٔ جمینای"),
+      cloudStatus(),
+      this::provider
+    );
+    k.item(
+      v,
+      "zap",
+      Kit.AMBER,
+      t("Daily request budget", "سقف درخواست روزانه"),
+      db.prefs.getInt("limit", 30) +
+        t(" requests · includes validation and retries", " درخواست · شامل بررسی و تلاش مجدد"),
+      () ->
+        select(
+          t("Daily request budget", "سقف درخواست روزانه"),
+          Arrays.asList("5", "15", "30", "60", "100"),
+          s -> db.prefs.edit().putInt("limit", Integer.parseInt(s)).apply()
+        )
+    );
+    k.section(v, t("Personalization", "شخصی‌سازی"), "INTERFACE");
+    k.item(
+      v,
+      "user_round",
+      Kit.TEAL,
+      t("Operator name", "نام کاربر"),
+      db.prefs.getString("name", t("Operator", "کاربر")),
+      () ->
+        edit(t("Operator name", "نام کاربر"), db.prefs.getString("name", ""), 36, s -> {
+          if (!Text.secret(s)) db.prefs.edit().putString("name", s).apply();
+        })
+    );
+    k.item(v, "globe", Kit.BLUE, t("Language", "زبان"), db.prefs.getString("language", "auto"), () ->
+      select("Language  /  زبان", Arrays.asList("Device / دستگاه", "فارسی", "English"), s ->
+        db.prefs
+          .edit()
+          .putString("language", s.equals("فارسی") ? "fa" : s.equals("English") ? "en" : "auto")
+          .apply()
+      )
+    );
+    k.item(v, "orbit", Kit.LILAC, t("Appearance", "ظاهر"), db.prefs.getString("theme", "Forest"), () ->
+      select(t("Surface palette", "پالت رنگ"), Arrays.asList("Forest", "Midnight"), s ->
+        db.prefs.edit().putString("theme", s).apply()
+      )
+    );
+    toggle(v, "activity", t("Animated signal field", "پویانمایی میدان سیگنال"), "motion", true);
+    k.item(
+      v,
+      "headphones",
+      Kit.TEAL,
+      t("Voice configuration", "پیکربندی صدا"),
+      t("Speech, rate and foreground conversation", "گفتار، سرعت و مکالمه در پیش‌زمینه"),
+      this::voice
+    );
+    k.section(v, t("Trust & data", "اعتماد و داده"), "ON DEVICE");
+    k.item(
+      v,
+      "shield_check",
+      Kit.LIME,
+      t("Device permissions", "مجوزهای دستگاه"),
+      t("Microphone, contacts, notifications", "میکروفون، مخاطبان، اعلان‌ها"),
+      this::permissions
+    );
+    k.item(
+      v,
+      "eye",
+      Kit.BLUE,
+      t("Window receipts", "رسید پنجره‌ها"),
+      WindowReceiptService.connected()
+        ? t("Enabled by Android", "در اندروید فعال است")
+        : t("Optional · off", "اختیاری · خاموش"),
+      this::access
+    );
+    k.item(
+      v,
+      "lock_keyhole",
+      Kit.TEAL,
+      t("Privacy & retention", "حریم خصوصی و نگهداری"),
+      t("Memory, trace history and deletion", "حافظه، تاریخچه و حذف"),
+      this::privacy
+    );
+    k.item(
+      v,
+      "file_down",
+      Kit.LILAC,
+      t("Export local data", "صدور داده‌های محلی"),
+      t("JSON · choose the destination", "JSON · انتخاب مقصد"),
+      a::export
+    );
+    k.section(v, t("Field manual", "راهنمای کاربرد"), "NEXUS 1.0");
+    k.item(
+      v,
+      "book_open",
+      Kit.AMBER,
+      t("Getting started", "راهنمای شروع"),
+      t("How to use Nexus safely", "استفادهٔ امن از نکسوس"),
+      this::guide
+    );
+    k.item(
+      v,
+      "circle_help",
+      Kit.BLUE,
+      t("Troubleshooting", "رفع اشکال"),
+      t("Provider, permissions and voice engines", "سرویس، مجوز و موتورهای صوتی"),
+      () ->
+        a.info(
+          t("Troubleshooting", "رفع اشکال"),
+          t(
+            "Provider: check the model ID and key, then use Test function calling. A 429 means quota or rate limits, not unlimited free use.\n\nApps: only launchable activities in the current profile appear. Install a compatible handler if Android rejects an intent.\n\nVoice: choose a speech service and install voices for fa-IR or en-US in Android settings. Use text if the engine is unavailable.\n\nAfter an interruption, inspect Activity. Nexus never automatically replays unfinished side effects.",
+            "جمینای: شناسهٔ مدل و کلید را بررسی و اتصال را آزمایش کنید. خطای ۴۲۹ به معنی محدودیت سهمیه است.\n\nبرنامه‌ها: فقط برنامه‌های قابل اجرای نمایهٔ فعلی نمایش داده می‌شوند.\n\nصدا: یک سرویس تشخیص گفتار و صدای فارسی یا انگلیسی نصب کنید. ورودی متن همیشه در دسترس است.\n\nپس از وقفه، تاریخچه را بررسی کنید؛ اقدام ناتمام خودکار تکرار نمی‌شود."
+          )
+        )
+    );
+    k.item(
+      v,
+      "command",
+      Kit.LIME,
+      t("About JARVIS NEXUS", "دربارهٔ جارویس نکسوس"),
+      "1.0.0   /   Android 8+",
+      () ->
+        a.info(
+          "JARVIS NEXUS",
+          t(
+            "Native Android personal agent. No local language model, no background microphone and no silent sending. Gemini is used only for cloud planning. Icons: Lucide (ISC / Feather MIT).",
+            "عامل شخصی بومی اندروید؛ بدون مدل محلی، میکروفون پس‌زمینه یا ارسال بی‌صدا. جمینای برای برنامه‌ریزی ابری به‌کار می‌رود. آیکون‌ها: Lucide."
+          )
+        )
+    );
+  }
+
+  private void select(String title, List<String> options, Consumer<String> cb) {
+    a.pick(title, options, i -> {
+      if (i >= 0) {
+        cb.accept(options.get(i));
+        a.changed();
+      }
+    });
+  }
+
+  private void toggle(LinearLayout v, String icon, String title, String key, boolean def) {
+    k.item(
+      v,
+      icon,
+      Kit.TEAL,
+      title,
+      db.prefs.getBoolean(key, def) ? t("On", "روشن") : t("Off", "خاموش"),
+      () -> {
+        db.prefs.edit().putBoolean(key, !db.prefs.getBoolean(key, def)).apply();
+        a.changed();
+      }
+    );
+  }
+
+  private void edit(String title, String value, int max, Consumer<String> cb) {
+    Kit.Sheet s = k.new Sheet(title);
+    EditText e = k.input(title, value, false);
+    e.setFilters(new InputFilter[] { new InputFilter.LengthFilter(max) });
+    k.add(s.body, e, -1, -2);
+    k.gap(s.body, 10);
+    s.action(t("Save", "ذخیره"), true, () -> {
+      String str = e.getText().toString().trim();
+      if (str.isEmpty() || Text.secret(str)) {
+        e.setError(t("Enter a non-secret value", "مقدار غیرمحرمانه وارد کنید"));
+        return;
+      }
+      cb.accept(str);
+      s.close();
+      a.changed();
+    });
+    s.show();
+  }
+
+  public void guide() {
+    Kit.Sheet s = k.new Sheet(t("First flight", "اولین فرمان"));
+    s.note(
+      t(
+        "01   Start locally\nTry “device report then list apps”. These steps use no cloud requests.\n\n02   Add intelligence\nConnect a personal Gemini key for free-form and conditional tasks. Commands and bounded tool receipts leave the device only for cloud planning.\n\n03   Stay in control\nReview exact recipients and drafts. Android completes calls and sends; Nexus reports the handoff, not delivery.",
+        "۰۱   محلی شروع کنید\n«گزارش دستگاه و بعد فهرست برنامه‌ها» بدون شبکه اجرا می‌شود.\n\n۰۲   هوش ابری\nبرای فرمان آزاد یا شرطی، کلید شخصی جمینای را اضافه کنید. فرمان و رسید محدود ابزار برای برنامه‌ریزی ابری ارسال می‌شود.\n\n۰۳   کنترل در دست شماست\nگیرنده و متن را بررسی کنید. تماس و ارسال در برنامهٔ اندروید انجام می‌شود؛ نکسوس فقط واگذاری را گزارش می‌کند."
+      )
+    );
+    s.action(t("Run the local sequence", "اجرای دنبالهٔ محلی"), true, () -> {
+      db.prefs.edit().putBoolean("intro", true).apply();
+      s.close();
+      a.page("agent");
+      a.submit(t("device report then list apps", "گزارش دستگاه و بعد فهرست برنامه‌ها"), false);
+    });
+    s.action(t("Got it", "متوجه شدم"), false, () -> {
+      db.prefs.edit().putBoolean("intro", true).apply();
+      s.close();
+      a.changed();
+    });
+    s.show();
+  }
+
+  public void provider() {
+    if (a.validating || a.agent.running) {
+      a.toast(
+        t("Wait for the current operation or cancel it first.", "ابتدا عملیات جاری را تمام یا لغو کنید.")
+      );
+      return;
+    }
+    Kit.Sheet s = k.new Sheet(t("Gemini connection", "اتصال جمینای"));
+    s.note(cloudStatus());
+    s.note(
+      t(
+        "Personal key mode. Google receives free-form instructions and compact tool observations. Contact matches, screen content and notes are not uploaded as tool results. Your key is encrypted with Android Keystore. Free-tier limits depend on the account and model.",
+        "حالت کلید شخصی: فرمان‌های آزاد و رسیدهای محدود ابزار به گوگل فرستاده می‌شوند؛ نتایج مخاطبان، متن صفحه و یادداشت‌ها ارسال نمی‌شوند. کلید با Android Keystore رمز می‌شود. سهمیه به حساب و مدل بستگی دارد."
+      )
+    );
+    EditText key = k.input(
+      a.vault.present()
+        ? t("Stored key • enter only to replace", "کلید ذخیره شده · فقط برای تعویض وارد کنید")
+        : t("Gemini API key", "کلید API جمینای"),
+      "",
+      false
+    );
+    key.setContentDescription("api_key");
+    key.setInputType(
+      android.text.InputType.TYPE_CLASS_TEXT |
+        android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD |
+        android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+    );
+    key.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
+    key.setSaveEnabled(false);
+    key.setImeOptions(
+      key.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
+    );
+    k.add(s.body, key, -1, -2);
+    k.gap(s.body, 12);
+    k.add(s.body, k.text(t("Model identifier", "شناسهٔ مدل"), 12, k.sub, 1), -1, -2);
+    k.gap(s.body, 5);
+    EditText model = k.input("gemini-…", a.gemini.model(), false);
+    model.setContentDescription("model_id");
+    k.add(s.body, model, -1, -2);
+    k.gap(s.body, 14);
+    Consumer<Boolean> save = probe -> {
+      String id = model.getText().toString().trim(),
+        secret = key.getText().toString().trim();
+      if (!Gemini.validModel(id)) {
+        model.setError(t("Enter a valid gemini-… identifier", "شناسهٔ معتبر gemini-… وارد کنید"));
+        return;
+      }
+      if (secret.isEmpty() && !a.vault.present()) {
+        key.setError(t("Enter your own API key", "کلید خود را وارد کنید"));
+        return;
+      }
+      try {
+        boolean modified = !secret.isEmpty() || !id.equals(a.gemini.model());
+        if (!secret.isEmpty()) a.vault.save(secret);
+        SharedPreferences.Editor editor = db.prefs.edit().putString("model", id);
+        if (modified) editor.putBoolean("verified", false);
+        editor.apply();
+        if (a.gemini.managed()) a.gemini.personal();
+        key.setText("");
+        s.close();
+        a.changed();
+        if (probe) testProvider();
+        else a.toast(
+          t(
+            "Configuration saved. Test to verify access.",
+            "تنظیمات ذخیره شد؛ برای بررسی، اتصال را آزمایش کنید."
+          )
+        );
+      } catch (Exception e) {
+        key.setError(
+          t("Key format or secure storage unavailable.", "قالب کلید یا ذخیرهٔ امن نامعتبر است.")
+        );
+      }
+    };
+    s.action(t("Save & test function calling", "ذخیره و آزمایش فراخوانی ابزار"), true, () ->
+      save.accept(true)
+    );
+    s.action(t("Save configuration", "ذخیرهٔ تنظیمات"), false, () -> save.accept(false));
+    if (a.vault.present()) s.action(t("Remove stored key", "حذف کلید ذخیره‌شده"), false, () -> {
+      s.close();
+      a.approval(
+        t("Remove Gemini key?", "حذف کلید جمینای؟"),
+        t(
+          "Cloud planning will be disabled. Local tools remain available.",
+          "برنامه‌ریزی ابری غیرفعال می‌شود. ابزارهای محلی باقی می‌مانند."
+        ),
+        ok -> {
+          if (ok) try {
+            a.vault.clear();
+            db.prefs.edit().putBoolean("verified", false).apply();
+            a.changed();
+          } catch (Exception e) {
+            a.toast(t("Secure storage error", "خطای حافظهٔ امن"));
+          }
+        }
+      );
+    });
+    s.action(t("Managed gateway session", "جلسهٔ درگاه مدیریت‌شده"), false, () -> {
+      s.close();
+      gateway();
+    });
+    s.dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+    s.show();
+  }
+
+  private void gateway() {
+    Kit.Sheet s = k.new Sheet(t("Managed gateway", "درگاه مدیریت‌شده"));
+    s.note(
+      t(
+        "For a gateway operated by your organization. Use a short-lived, scoped OIDC access token, not a Gemini key. Your instructions and this token go only to the HTTPS origin you approve. The token stays in RAM; reconnect after restarting. No hosted gateway is included.",
+        "فقط برای درگاه سازمان خودتان. توکن دسترسی کوتاه‌عمر OIDC وارد کنید، نه کلید جمینای. فرمان و توکن به مبدأ HTTPS تأییدشدهٔ شما می‌روند. توکن فقط در حافظهٔ موقت است. درگاه میزبانی‌شده همراه برنامه نیست."
+      )
+    );
+    EditText origin = k.input(
+        "https://gateway.example.org",
+        db.prefs.getString("gateway_origin", ""),
+        false
+      ),
+      token = k.input(t("Short-lived access token", "توکن دسترسی کوتاه‌عمر"), "", false),
+      model = k.input("Model ID", a.gemini.model(), false);
+    token.setInputType(
+      android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+    );
+    token.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
+    token.setSaveEnabled(false);
+    token.setImeOptions(
+      token.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
+    );
+    for (EditText e : Arrays.asList(origin, token, model)) {
+      k.add(s.body, e, -1, -2);
+      k.gap(s.body, 9);
+    }
+    s.action(t("Review & test gateway", "بررسی و آزمایش درگاه"), true, () -> {
+      String host = origin.getText().toString().trim(),
+        bearer = token.getText().toString().trim(),
+        id = model.getText().toString().trim();
+      if (!Gemini.validOrigin(host) || !Gemini.validModel(id) || bearer.isEmpty()) {
+        a.toast(t("Check HTTPS origin, model and token.", "مبدأ HTTPS، مدل و توکن را بررسی کنید."));
+        return;
+      }
+      s.close();
+      a.approval(t("Trust this gateway?", "اعتماد به این درگاه؟"), host + "\n" + id, ok -> {
+        if (ok) try {
+          a.gemini.gateway(host, bearer);
+          db.prefs.edit().putString("model", id).apply();
+          testProvider();
+        } catch (IllegalArgumentException e) {
+          a.toast(t("Invalid access token.", "توکن دسترسی نامعتبر است."));
+        }
+      });
+    });
+    if (a.gemini.managed()) s.action(
+      t("Disconnect managed session", "قطع جلسهٔ مدیریت‌شده"),
+      false,
+      () -> {
+        a.gemini.personal();
+        s.close();
+        a.changed();
+      }
+    );
+    s.dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+    s.show();
+  }
+
+  private void testProvider() {
+    a.validating = true;
+    db.prefs.edit().putBoolean("verified", false).apply();
+    a.changed();
+    a.worker.execute(() -> {
+      String msg;
+      boolean passed = false;
+      try {
+        a.gemini.probe();
+        passed = true;
+        msg = t(
+          "The selected model returned the expected function call. No device action was invoked.",
+          "مدل فراخوانی ابزار مورد انتظار را برگرداند. هیچ اقدام دستگاهی انجام نشد."
+        );
+      } catch (Exception ex) {
+        msg = ex instanceof Gemini.Failure
+          ? t(ex.getMessage(), Gemini.persianError((Gemini.Failure) ex))
+          : t(
+            "Provider check failed. Check network, key and model availability.",
+            "بررسی اتصال ناموفق بود؛ شبکه، کلید و مدل را بررسی کنید."
+          );
+      }
+      boolean ok = passed;
+      String result = msg;
+      a.main.post(() -> {
+        if (a.isDestroyed()) return;
+        a.validating = false;
+        db.prefs.edit().putBoolean("verified", ok).apply();
+        a.changed();
+        if (a.foreground()) a.info(
+          ok
+            ? t("Connection verified", "اتصال تأیید شد")
+            : t("Connection not verified", "اتصال تأیید نشد"),
+          result
+        );
+      });
+    });
+  }
+
+  public void appPicker() {
+    Kit.Sheet s = k.new Sheet(t("Application registry", "فهرست برنامه‌ها"));
+    EditText q = k.input(t("Search name or package", "جست‌وجوی نام یا بسته"), "", false);
+    k.add(s.body, q, -1, -2);
+    k.gap(s.body, 10);
+    LinearLayout results = k.col();
+    k.add(s.body, results, -1, -2);
+    Runnable show = () -> {
+      results.removeAllViews();
+      String query = Text.norm(q.getText().toString());
+      int count = 0;
+      for (AppIndex.App app : a.apps) {
+        if (!Text.norm(app.name + " " + app.pkg).contains(query)) continue;
+        k.item(results, "smartphone", Kit.BLUE, app.name, app.pkg, () -> {
+          s.close();
+          a.run(new Call("launch_app", "name", app.pkg));
+        });
+        if (++count >= 60) break;
+      }
+      if (count == 0) k.add(
+        results,
+        k.text(
+          a.indexed
+            ? t("No matching launchable activity.", "فعالیت قابل اجرایی یافت نشد.")
+            : t("Indexing applications…", "نمایه‌سازی برنامه‌ها…"),
+          14,
+          k.sub,
+          0
+        ),
+        -1,
+        -2
+      );
+    };
+    q.addTextChangedListener(
+      new TextWatcher() {
+        public void beforeTextChanged(CharSequence s, int st, int c, int af) {}
+
+        public void onTextChanged(CharSequence s, int st, int before, int count) {
+          show.run();
+        }
+
+        public void afterTextChanged(Editable e) {}
+      }
+    );
+    show.run();
+    s.action(t("Refresh registry", "بازخوانی فهرست"), false, () -> {
+      s.close();
+      a.index();
+      a.toast(t("Refreshing application registry", "در حال بازخوانی فهرست"));
+    });
+    s.show();
+  }
+
+  public void access() {
+    Kit.Sheet s = k.new Sheet(t("Optional window receipts", "رسید اختیاری پنجره"));
+    s.note(
+      t(
+        "Android grants this service powerful accessibility access. Nexus narrows it to one expected package for at most 4.5 seconds per handoff. It can confirm a window and, only for the manually chosen Display walkthrough, find a scrollable control and scroll once. It never reads labels or passwords, captures screens, types, taps or submits forms. No accessibility data goes to Gemini. Enable or disable it yourself in Android settings.",
+        "اندروید دسترسی گستردهٔ دسترس‌پذیری می‌دهد؛ نکسوس آن را فقط برای بستهٔ مورد انتظار و حداکثر ۴٫۵ ثانیه به کار می‌گیرد. تنها در پیمایش دستی نمایشگر، یک کنترل قابل پیمایش پیدا می‌کند. هیچ متن یا رمزی نمی‌خواند، تصویر نمی‌گیرد و فرمی تکمیل یا ارسال نمی‌کند. هیچ دادهٔ دسترس‌پذیری به جمینای نمی‌رود. روشن و خاموش کردن سرویس فقط با شماست."
+      )
+    );
+    s.action(t("Open Android accessibility settings", "باز کردن تنظیمات دسترس‌پذیری"), true, () -> {
+      s.close();
+      a.androidPage(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+    });
+    s.action(t("Keep current setting", "حفظ تنظیم فعلی"), false, s::close);
+    s.show();
+  }
+
+  public void permissions() {
+    Kit.Sheet s = k.new Sheet(t("Permission ledger", "فهرست مجوزها"));
+    for (String p : Arrays.asList(
+      Manifest.permission.RECORD_AUDIO,
+      Manifest.permission.READ_CONTACTS,
+      Manifest.permission.POST_NOTIFICATIONS
+    )) {
+      if (p.equals(Manifest.permission.POST_NOTIFICATIONS) && Build.VERSION.SDK_INT < 33) continue;
+      boolean ok = a.checkSelfPermission(p) == PackageManager.PERMISSION_GRANTED;
+      s.note(
+        p.substring(p.lastIndexOf('.') + 1) +
+          "   ·   " +
+          (ok ? t("Granted", "مجاز") : t("Not granted", "بدون مجوز"))
+      );
+    }
+    s.note(
+      t(
+        "No location, SMS sending, direct-call, broad storage or all-packages permission. Android asks for access when a tool needs it.",
+        "هیچ مجوز مکان، ارسال پیامک، تماس مستقیم، حافظهٔ کلی یا همهٔ بسته‌ها درخواست نمی‌شود. مجوزها هنگام نیاز ابزار درخواست می‌شوند."
+      )
+    );
+    s.action(t("Manage in Android", "مدیریت در اندروید"), true, () -> {
+      s.close();
+      a.androidPage(
+        new Intent(
+          Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+          Uri.fromParts("package", a.getPackageName(), null)
+        )
+      );
+    });
+    s.show();
+  }
+
+  private void voice() {
+    Kit.Sheet s = k.new Sheet(t("Voice configuration", "پیکربندی صدا"));
+    s.note(
+      t(
+        "Speech services and language packs are supplied by your device. Continuous turns stop when Nexus leaves the foreground. No wake word or background recording.",
+        "سرویس گفتار و بستهٔ زبانی را دستگاه فراهم می‌کند. مکالمه هنگام خروج از پیش‌زمینه متوقف می‌شود. ضبط پس‌زمینه یا کلمهٔ بیدارباش ندارد."
+      )
+    );
+    for (String key : Arrays.asList("speak", "continuous")) {
+      boolean on = db.prefs.getBoolean(key, key.equals("speak"));
+      String text = key.equals("speak")
+        ? t("Spoken voice replies", "پاسخ صوتی")
+        : t("Continuous foreground turns", "مکالمهٔ پیوسته در پیش‌زمینه");
+      s.action(text + "   ·   " + (on ? t("On", "روشن") : t("Off", "خاموش")), false, () -> {
+        db.prefs.edit().putBoolean(key, !on).apply();
+        s.close();
+        voice();
+      });
+    }
+    s.action(
+      t("Speaking speed", "سرعت گفتار") + "   ·   " + db.prefs.getFloat("speed", 1) + "×",
+      false,
+      () -> {
+        s.close();
+        select(t("Speaking speed", "سرعت گفتار"), Arrays.asList("0.8", "1.0", "1.15", "1.3"), x ->
+          db.prefs.edit().putFloat("speed", Float.parseFloat(x)).apply()
+        );
+      }
+    );
+    s.action(t("Installed voice", "صدای نصب‌شده") + "   ·   " + a.tag(), false, () -> {
+      s.close();
+      List<String> voices = new ArrayList<>(a.voice.voices(a.tag()));
+      voices.add(0, t("Engine default", "پیش‌فرض موتور"));
+      select(t("Installed voices", "صداهای نصب‌شده"), voices, x ->
+        db.prefs.edit().putString("voice_" + a.tag(), x.equals(voices.get(0)) ? "" : x).apply()
+      );
+    });
+    s.show();
+  }
+
+  public String kind(String key) {
+    switch (key) {
+      case "note":
+        return t("Note", "یادداشت");
+      case "shortcut":
+        return t("Shortcut", "میان‌بر");
+      case "app_alias":
+        return t("App alias", "نام مستعار برنامه");
+      case "contact_alias":
+        return t("Contact alias", "نام مستعار مخاطب");
+      default:
+        return t("All", "همه");
+    }
+  }
+
+  public void entry(Map<String, String> old) {
+    if (!db.memoryOn()) {
+      a.toast(
+        t("Enable memory in Privacy controls first.", "ابتدا حافظه را در کنترل حریم خصوصی فعال کنید.")
+      );
+      return;
+    }
+    Kit.Sheet s = k.new Sheet(
+      old == null ? t("New memory entry", "ورودی جدید حافظه") : t("Edit memory entry", "ویرایش حافظه")
+    );
+    s.note(
+      t(
+        "Store only non-secret information. Shortcuts run through the same permission and approval checks as typed commands.",
+        "فقط اطلاعات غیرمحرمانه ذخیره کنید. اجرای میان‌بر همان مجوزها و تأییدهای فرمان متنی را لازم دارد."
+      )
+    );
+    String[] picked = { old == null ? "note" : old.get("kind") };
+    List<String> kinds = Arrays.asList("note", "shortcut", "app_alias", "contact_alias");
+    TextView type = k.button(kind(picked[0]) + "   ▾", false, () -> {});
+    k.tap(
+      type,
+      () -> {
+        List<String> opts = new ArrayList<>();
+        for (String kv : kinds) opts.add(kind(kv));
+        a.pick(t("Entry type", "نوع ورودی"), opts, i -> {
+          if (i >= 0) {
+            picked[0] = kinds.get(i);
+            type.setText(kind(picked[0]) + "   ▾");
+          }
+        });
+      },
+      t("Entry type", "نوع ورودی")
+    );
+    k.add(s.body, type, -1, -2);
+    k.gap(s.body, 8);
+    EditText name = k.input(
+        t("Title or trigger phrase", "عنوان یا عبارت آغازگر"),
+        old == null ? "" : old.get("name"),
+        false
+      ),
+      val = k.input(
+        t("Note, command, or matching name", "یادداشت، فرمان یا نام مقصد"),
+        old == null ? "" : old.get("value"),
+        true
+      );
+    name.setContentDescription("memory_name");
+    val.setContentDescription("memory_value");
+    k.add(s.body, name, -1, -2);
+    k.gap(s.body, 8);
+    k.add(s.body, val, -1, -2);
+    k.gap(s.body, 12);
+    s.action(t("Save entry", "ذخیرهٔ ورودی"), true, () -> {
+      try {
+        db.save(
+          old == null ? -1 : Long.parseLong(old.get("id")),
+          picked[0],
+          name.getText().toString(),
+          val.getText().toString()
+        );
+        s.close();
+        a.changed();
+      } catch (Exception e) {
+        a.toast(
+          t(
+            "Use a unique title and non-secret value within the limits.",
+            "عنوان یکتا و مقدار غیرمحرمانه وارد کنید."
+          )
+        );
+      }
+    });
+    if (old != null) {
+      if (old.get("kind").equals("shortcut")) {
+        boolean pinned = "1".equals(old.get("pinned"));
+        s.action(
+          pinned ? t("Unpin from Home", "برداشتن از خانه") : t("Pin to Home", "سنجاق به خانه"),
+          false,
+          () -> {
+            try {
+              db.pin(Long.parseLong(old.get("id")), !pinned);
+              s.close();
+              a.changed();
+            } catch (IllegalStateException e) {
+              a.toast(t("At most eight pinned commands.", "حداکثر هشت فرمان سنجاق می‌شود."));
+            }
+          }
+        );
+      }
+      if (old.get("kind").equals("shortcut")) s.action(
+        t("Run saved shortcut", "اجرای میان‌بر ذخیره‌شده"),
+        false,
+        () -> {
+          s.close();
+          a.page("agent");
+          a.submit(old.get("name"), false);
+        }
+      );
+      s.action(t("Delete entry", "حذف ورودی"), false, () -> {
+        s.close();
+        a.approval(t("Delete entry?", "حذف ورودی؟"), old.get("name"), ok -> {
+          if (ok) {
+            db.forget(Long.parseLong(old.get("id")));
+            a.changed();
+          }
+        });
+      });
+    }
+    s.show();
+  }
+
+  public void privacy() {
+    if (a.agent.running) {
+      a.toast(
+        t("Finish or cancel the active task first.", "ابتدا وظیفهٔ جاری را پایان دهید یا لغو کنید.")
+      );
+      return;
+    }
+    Kit.Sheet s = k.new Sheet(t("Privacy controls", "کنترل حریم خصوصی"));
+    s.note(
+      t(
+        "Explicit notes and shortcuts stay in private SQLite storage. History retains tool names, times and result codes, not message bodies, numbers or raw commands. Pausing does not delete existing rows. Usage counts and scheduled reminders are separate.",
+        "یادداشت و میان‌بر در SQLite خصوصی می‌مانند. تاریخچه فقط نام ابزار، زمان و کد نتیجه را نگه می‌دارد، نه متن پیام، شماره یا فرمان خام. توقف به معنای حذف نیست. شمارنده‌های مصرف و یادآورها جدا هستند."
+      )
+    );
+    for (String key : Arrays.asList("memory", "history")) {
+      boolean enabled = db.prefs.getBoolean(key, true);
+      s.action(
+        (key.equals("memory")
+              ? t("Memory retrieval & writes", "بازیابی و ثبت حافظه")
+              : t("Audit history", "تاریخچهٔ فعالیت")) +
+          "   ·   " +
+          (enabled ? t("On", "روشن") : t("Off", "خاموش")),
+        false,
+        () -> {
+          db.prefs.edit().putBoolean(key, !enabled).apply();
+          a.agent.clearSession();
+          s.close();
+          privacy();
+        }
+      );
+    }
+    s.action(t("Erase entries & task history", "حذف حافظه و تاریخچه"), false, () -> {
+      s.close();
+      a.approval(
+        t("Erase local memory?", "حذف حافظهٔ محلی؟"),
+        t(
+          "Permanently delete every saved entry, shortcut and task receipt. This cannot be undone. API configuration and scheduled reminders are not affected.",
+          "همهٔ ورودی‌ها، میان‌برها و رسیدها برای همیشه حذف می‌شوند. کلید جمینای و یادآورها تغییر نمی‌کنند."
+        ),
+        ok -> {
+          if (ok) {
+            db.clearHistory();
+            db.clearMemory();
+            a.agent.clearSession();
+            a.changed();
+          }
+        }
+      );
+    });
+    s.show();
+  }
+}
