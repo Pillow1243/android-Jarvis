@@ -1,11 +1,14 @@
+INSTRUMENTATION_STATUS: nexus_phase=launch
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: nexus_phase=navigation
+INSTRUMENTATION_STATUS_CODE: 1
 INSTRUMENTATION_RESULT: stream=
 NEXUS_TESTS_FAILED
-java.lang.AssertionError: Timed out: visible node: nav_agent
-	at ai.nexus.test.NexusInstrumentation.waitFor(NexusInstrumentation.java:93)
-	at ai.nexus.test.NexusInstrumentation.node(NexusInstrumentation.java:119)
-	at ai.nexus.test.NexusInstrumentation.click(NexusInstrumentation.java:127)
-	at ai.nexus.test.NexusInstrumentation.navigation(NexusInstrumentation.java:274)
-	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:193)
+java.lang.AssertionError: Timed out: visible node: model_id
+	at ai.nexus.test.NexusInstrumentation.waitFor(NexusInstrumentation.java:143)
+	at ai.nexus.test.NexusInstrumentation.node(NexusInstrumentation.java:169)
+	at ai.nexus.test.NexusInstrumentation.navigation(NexusInstrumentation.java:338)
+	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:245)
 	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
 
 INSTRUMENTATION_CODE: 0
