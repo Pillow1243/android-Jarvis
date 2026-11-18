@@ -89,7 +89,7 @@ public final class WindowReceiptService extends AccessibilityService {
             try {
               if (
                 root == null ||
-                !expected.contentEquals(root.getPackageName()) ||
+                !expected.contentEquals(root.getPackageName() == null ? "" : root.getPackageName()) ||
                 !scrollOne(root, 0, new int[] { 100 })
               ) finish("no_scroll_control");
             } finally {

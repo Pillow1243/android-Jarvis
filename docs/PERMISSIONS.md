@@ -1,0 +1,24 @@
+# Permissions, retention and trust
+
+| Access | When and why | What Nexus does not do |
+|---|---|---|
+| `INTERNET` | A cloud planning request or explicit provider test. Native HTTPS with system trust anchors, no cleartext and no redirect forwarding of credentials. | No analytics SDK, ads, arbitrary code fetch or cloud-sync database. Voice engines and destination apps have their own network behavior. |
+| `RECORD_AUDIO` (runtime) | Educational prompt followed by the Android prompt on first voice use. Foreground recognizer only. | No audio files, always-on service, secret mic activation or background listening. |
+| `READ_CONTACTS` (runtime) | Only for a named-recipient lookup. Local phone rows, bounded matches and explicit disambiguation. | No writing contacts, uploads of contact matches, directory syncing, silent calls or automatic sending. |
+| `POST_NOTIFICATIONS` (runtime on Android 13+) | Needed to show a confirmed local reminder. | No promotional notifications or hidden always-on microphone service. |
+| `RECEIVE_BOOT_COMPLETED` | Re-register existing reminders after boot. | Does not restart speech, cloud sessions or interrupted agent tasks. |
+| Launcher, speech and TTS `<queries>` | Discover relevant launchable activities and speech engines. | No `QUERY_ALL_PACKAGES`. |
+| User-enabled `AccessibilityService` | Android, not Nexus, grants binding/access. The service is off by default and declares `isAccessibilityTool=false`. | No reading text/labels, screenshots, coordinates, arbitrary taps, typing, credential collection or autonomous accessibility planning. |
+| Documents | Android system picker for browsing or an explicitly requested JSON export | No broad filesystem permissions. The assistant never reads the chosen file as instructions. |
+
+**Levels:** low-risk reads/launches may execute directly; externally visible drafts, transfers, searches and writes get an exact preview and one-shot consent. High-impact actions are **unsupported** rather than being offered behind a misleading confirmation dialog. Approve buttons filter obscured touches. Device security and native destination confirmations remain in charge.
+
+**Accessibility scope:** while idle the service filters to the Nexus package and ignores events. For an expected launch it temporarily filters to the target package (up to 4.5 seconds). The walkthrough is manual-only, package-limited to Android Settings, waits for the Display settings class and performs at most one `ACTION_SCROLL_FORWARD` on a visible, non-password scrollable control. Only a matching scroll event verifies the action. There is no model-facing screen tree. Play's automation guidance distinguishes deterministic scripts from prohibited autonomous accessibility control [1](https://support.google.com/googleplay/android-developer/answer/10964491?hl=en). This design does **not** amount to an assertion of Play approval.
+
+**Personal key:** AES-256-GCM with a fresh platform-generated IV and an AndroidKeyStore key. Only IV and ciphertext enter a dedicated private preferences file. No plaintext fallback, key in URL, repository secret or APK-embedded production key. Deleting the key removes the ciphertext and Keystore entry. Client-side protection cannot hide a credential from a determined analyst with control of the device/process. Debug builds are intentionally debuggable; use personal test credentials and limits.
+
+**Cloud payload:** what you type/say for free-form planning, bounded conversational context when enabled, declared schemas and small tool receipts. Your own instruction can contain private information. Contacts, actual notes, screen text, voice recordings and raw Android UI trees are not exported as function results. A managed session sends the same planning payload to the HTTPS origin you explicitly approve; never point it at an untrusted host. The provider key is never forwarded from personal mode to a managed gateway.
+
+**Storage:** SQLite is private app storage, **not** an independently encrypted database. Automatic Android backup is disabled. Raw contact choices and drafts can appear in the active UI but are not in the persistent journal. Memory writes are explicit. Common credential patterns are rejected, not guaranteed detectable. Notes/shortcuts can be edited, deleted or paused; audit retention can be paused separately. Erase removes entries and task/step/event history, not reminder schedules, provider configuration or daily usage. Delete reminders and provider credentials using their own controls. An approved export intentionally contains explicit notes and shortcuts; protect the destination file.
+
+**Test fixtures:** the optional `androidTest` APK requests contact-write access solely to seed two synthetic contacts in an expendable emulator. The production manifest contains **no** `WRITE_CONTACTS`, `SEND_SMS`, `CALL_PHONE`, location, background microphone or exact-alarm permission.

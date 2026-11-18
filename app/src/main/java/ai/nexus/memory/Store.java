@@ -94,14 +94,21 @@ public final class Store extends SQLiteOpenHelper {
   }
 
   public void interruptOpen() {
-    getWritableDatabase().execSQL(
-      "INSERT INTO events(step,stamp,state,code) SELECT id,?,'interrupted','not_replayed' FROM steps WHERE state IN ('requested','attempted','executed')",
-      new Object[] { System.currentTimeMillis() }
-    );
-    getWritableDatabase().execSQL("UPDATE tasks SET state='interrupted' WHERE state='running'");
-    getWritableDatabase().execSQL(
-      "UPDATE steps SET state='interrupted', code='not_replayed' WHERE state IN ('requested','attempted','executed')"
-    );
+    SQLiteDatabase d = getWritableDatabase();
+    d.beginTransaction();
+    try {
+      d.execSQL(
+        "INSERT INTO events(step,stamp,state,code) SELECT id,?,'interrupted','not_replayed' FROM steps WHERE state IN ('requested','attempted','executed')",
+        new Object[] { System.currentTimeMillis() }
+      );
+      d.execSQL("UPDATE tasks SET state='interrupted' WHERE state='running'");
+      d.execSQL(
+        "UPDATE steps SET state='interrupted', code='not_replayed' WHERE state IN ('requested','attempted','executed')"
+      );
+      d.setTransactionSuccessful();
+    } finally {
+      d.endTransaction();
+    }
   }
 
   public long task(String title) {

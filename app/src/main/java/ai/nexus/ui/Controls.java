@@ -279,6 +279,9 @@ public final class Controls {
     );
     key.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
     key.setSaveEnabled(false);
+    key.setImeOptions(
+      key.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
+    );
     k.add(s.body, key, -1, -2);
     k.gap(s.body, 12);
     k.add(s.body, k.text(t("Model identifier", "شناسهٔ مدل"), 12, k.sub, 1), -1, -2);
@@ -372,6 +375,9 @@ public final class Controls {
     );
     token.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
     token.setSaveEnabled(false);
+    token.setImeOptions(
+      token.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
+    );
     for (EditText e : Arrays.asList(origin, token, model)) {
       k.add(s.body, e, -1, -2);
       k.gap(s.body, 9);
@@ -424,7 +430,7 @@ public final class Controls {
         );
       } catch (Exception ex) {
         msg = ex instanceof Gemini.Failure
-          ? ex.getMessage()
+          ? t(ex.getMessage(), Gemini.persianError((Gemini.Failure) ex))
           : t(
             "Provider check failed. Check network, key and model availability.",
             "بررسی اتصال ناموفق بود؛ شبکه، کلید و مدل را بررسی کنید."

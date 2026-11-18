@@ -267,7 +267,7 @@ public final class ToolBox {
         "panel",
         "|wifi|bluetooth|location|display|sound|notifications|battery|apps|dnd|internet|volume"
       ),
-      (c, h) -> h.commit("", () -> launch(h, new Intent(panel(c.get("panel"))), c.get("panel"), false))
+      (c, h) -> h.commit("", () -> launch(h, panelIntent(h, c.get("panel")), c.get("panel"), false))
     );
     add(
       new Spec(
@@ -655,6 +655,13 @@ public final class ToolBox {
     );
   }
 
+  private static Intent panelIntent(Invocation h, String p) {
+    if (p.equals("notifications") && Build.VERSION.SDK_INT < 30) return new Intent(
+      Settings.ACTION_APP_NOTIFICATION_SETTINGS
+    ).putExtra(Settings.EXTRA_APP_PACKAGE, h.activity().getPackageName());
+    return new Intent(panel(p));
+  }
+
   private static String panel(String p) {
     switch (p) {
       case "wifi":
@@ -668,13 +675,13 @@ public final class ToolBox {
       case "sound":
         return Settings.ACTION_SOUND_SETTINGS;
       case "notifications":
-        return "android.settings.NOTIFICATION_SETTINGS";
+        return Settings.ACTION_ALL_APPS_NOTIFICATION_SETTINGS;
       case "battery":
         return Intent.ACTION_POWER_USAGE_SUMMARY;
       case "apps":
         return Settings.ACTION_APPLICATION_SETTINGS;
       case "dnd":
-        return "android.settings.ZEN_MODE_SETTINGS";
+        return Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS;
       case "volume":
         return Build.VERSION.SDK_INT >= 29
           ? Settings.Panel.ACTION_VOLUME

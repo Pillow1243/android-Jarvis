@@ -317,7 +317,7 @@ public final class Agent {
           if (alive(g)) {
             clearDeadline();
             String reason = e instanceof Gemini.Failure
-              ? e.getMessage()
+              ? t(e.getMessage(), Gemini.persianError((Gemini.Failure) e))
               : t(
                 "Gemini connection failed. Check Settings and your network.",
                 "اتصال جمینای ناموفق بود. شبکه و تنظیمات را بررسی کنید."

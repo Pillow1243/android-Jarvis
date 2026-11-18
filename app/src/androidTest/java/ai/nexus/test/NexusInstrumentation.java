@@ -27,7 +27,34 @@ public final class NexusInstrumentation extends Instrumentation {
   private UiAutomation auto;
   private File evidence;
   private final List<String> results = new ArrayList<>();
-  private int checks;
+  private int checks, failures;
+
+  private interface Scenario {
+    void run() throws Exception;
+  }
+
+  private void scenario(String name, Scenario task) throws Exception {
+    try {
+      task.run();
+    } catch (Throwable error) {
+      failures++;
+      StringWriter trace = new StringWriter();
+      error.printStackTrace(new PrintWriter(trace));
+      results.add("FAIL  " + name + ": " + trace);
+      write();
+      try {
+        shot("failed-" + name);
+        returnToNexus();
+        action(() -> {
+          a.agent.cancel();
+          a.dismissGate();
+          a.page("home");
+        });
+      } catch (Throwable recovery) {
+        results.add("RECOVERY  " + recovery.getClass().getSimpleName());
+      }
+    }
+  }
 
   @Override
   public void onCreate(Bundle args) {
@@ -164,12 +191,15 @@ public final class NexusInstrumentation extends Instrumentation {
       waitFor(() -> ui(() -> a.indexed && a.active), "foreground application index");
       programTests();
       navigation();
-      sequence();
-      memory();
-      contacts();
-      platform();
-      cloudContract();
-      lifecycle();
+      scenario("sequence", this::sequence);
+      scenario("memory", this::memory);
+      scenario("contacts", this::contacts);
+      scenario("platform", this::platform);
+      scenario("cloud", this::cloudContract);
+      scenario("lifecycle", this::lifecycle);
+      if (failures != 0) throw new AssertionError(
+        failures + " device scenario(s) failed; see instrumentation.txt"
+      );
       result.putString(
         "stream",
         "\nNEXUS_TESTS_PASSED\n" + String.join("\n", results) + "\nAssertions: " + checks + "\n"
@@ -374,7 +404,10 @@ public final class NexusInstrumentation extends Instrumentation {
     click("مادر نکسوس دو\n+12025550102");
     click("Approve action");
     stage("handoff");
-    waitFor(() -> !pkg().equals(a.getPackageName()), "dialer foreground");
+    waitFor(
+      () -> pkg().toLowerCase(Locale.ROOT).contains("dialer"),
+      "actual dialer window after transition"
+    );
     String dialer = pkg();
     ok(dialer.toLowerCase(Locale.ROOT).contains("dialer"), "Actual dialer package: " + dialer);
     returnToNexus();

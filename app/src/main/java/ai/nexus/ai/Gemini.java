@@ -38,6 +38,25 @@ public final class Gemini implements Provider {
     }
   }
 
+  public static String persianError(Failure e) {
+    switch (e.code) {
+      case "quota":
+        return "سهمیه یا سقف نرخ جمینای پر شده است. منتظر بمانید یا مدل را تغییر دهید.";
+      case "configuration":
+        return "کلید، شناسهٔ مدل یا درخواست پذیرفته نشد. تنظیمات ارائه‌دهنده را بررسی کنید.";
+      case "model_unavailable":
+        return "مدل برای این کلید در دسترس نیست. مدل دیگری انتخاب کنید.";
+      case "timeout":
+        return "مهلت اتصال به جمینای تمام شد؛ فراخوانی ناتمام اجرا نشد.";
+      case "local_limit":
+        return "سقف درخواست روزانهٔ محلی پر شده است.";
+      case "offline":
+        return "اتصال به جمینای ممکن نیست. شبکه را بررسی کنید یا فرمان محلی بدهید.";
+      default:
+        return "پاسخ کامل و معتبر از جمینای دریافت نشد. هیچ فراخوانی معلقی اجرا نشد.";
+    }
+  }
+
   public static Failure status(int n) {
     if (n == 429) return new Failure(
       "quota",
@@ -180,10 +199,14 @@ public final class Gemini implements Provider {
   public void probe() throws Exception {
     int ticket = generation.get();
     JSONObject meta = request("", null, null, ticket);
-    if (
-      !meta.optString("name").equals("models/" + model()) ||
-      !meta.optString("supportedGenerationMethods").contains("generateContent")
-    ) throw new Failure("model_unavailable", "Model does not advertise generateContent.");
+    boolean generates = false;
+    JSONArray methods = meta.optJSONArray("supportedGenerationMethods");
+    if (methods != null) for (int i = 0; i < methods.length(); i++) generates |=
+      "generateContent".equals(methods.optString(i));
+    if (!meta.optString("name").startsWith("models/gemini-") || !generates) throw new Failure(
+      "model_unavailable",
+      "Model does not advertise generateContent."
+    );
     String nonce = java.util.UUID.randomUUID().toString().substring(0, 8);
     JSONObject decl = J.obj(
       "name",
