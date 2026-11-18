@@ -8,7 +8,7 @@ A native, Persian/English Android assistant that plans with Gemini and acts thro
 
 ## Install and try it
 
-1. Download **[JARVIS-NEXUS.apk](delivery/JARVIS-NEXUS.apk)**. Compare its SHA-256 with [the device evidence](docs/evidence/android/apk.sha256).
+1. Download **[JARVIS-NEXUS.apk](https://github.com/Pillow1243/android-Jarvis/releases/download/v1.0.0-debug.1/JARVIS-NEXUS.apk)** ([file in the source tree](delivery/JARVIS-NEXUS.apk)). Compare its SHA-256 with [the device evidence](docs/evidence/android/apk.sha256).
 2. Open the APK on your Android phone, or run `adb install -r JARVIS-NEXUS.apk`. Only allow installation from a source you trust. Different debug builds can have different signing certificates; Android will reject an update with a different signer. Export anything you want to keep before uninstalling an incompatible older build.
 3. Open **JARVIS NEXUS → Type a command**. Try **`device report then list apps`** or **`گزارش دستگاه و بعد فهرست برنامه‌ها`**. Open **Agent** to see actual OS observations. These commands need no API key.
 4. For free-form planning, open the status chip or **Settings → Gemini provider**. Enter your own Gemini Developer API key, select a model and choose **Save & test function calling**. This checks model metadata **and** a nonce-bearing, harmless function call. Merely saving a key does not mark the connection verified. Never paste a key into a command, issue, note or chat.

@@ -20,3 +20,5 @@ Tested application source: [`113afbd15894`](https://github.com/Pillow1243/androi
 - SHA-256: `cdd3b85458b5b5149095048b1b294c1ddec4c461c9adeef0fab7ef18ae5f9848`
 - Debug signer SHA-256: `d9deeb1fe08db35015c974fe537cf7a39bbc48b2d3c6097e109a79ab83f0c11a`
 - See [the gate matrix](TESTING.md) for the failed/unverified production criteria, not just the passing tests.
+
+[Public APK download](https://github.com/Pillow1243/android-Jarvis/releases/download/v1.0.0-debug.1/JARVIS-NEXUS.apk) · [verified public asset receipt](evidence/download.json).

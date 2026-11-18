@@ -2,7 +2,7 @@
 
 ## Candidate actually delivered — 18 November 2026 (UTC)
 
-**Debug distribution; not a production approval.** [Passing Android verification run](https://github.com/Pillow1243/android-Jarvis/actions/runs/44384092541) · [tested build inputs](https://github.com/Pillow1243/android-Jarvis/tree/113afbd15894ba002330399a0256f1cbe09110b1) · [installed binary](../delivery/JARVIS-NEXUS.apk).
+**[Download the verified debug APK](https://github.com/Pillow1243/android-Jarvis/releases/download/v1.0.0-debug.1/JARVIS-NEXUS.apk)** · [Public, unauthenticated download read-back](https://github.com/Pillow1243/android-Jarvis/actions/runs/44386951244/job/135093989229). Not a production approval. [Passing Android verification run](https://github.com/Pillow1243/android-Jarvis/actions/runs/44384092541) · [tested build inputs](https://github.com/Pillow1243/android-Jarvis/tree/113afbd15894ba002330399a0256f1cbe09110b1) · [installed binary](../delivery/JARVIS-NEXUS.apk).
 
 - `ai.nexus` **1.0.0 (1)** · Android 8.0+ (min 26), target 36. The signed APK is **397,905 bytes**. SHA-256: `cdd3b85458b5b5149095048b1b294c1ddec4c461c9adeef0fab7ef18ae5f9848`. Android Debug certificate SHA-256: `d9deeb1fe08db35015c974fe537cf7a39bbc48b2d3c6097e109a79ab83f0c11a`. This is not a release key.
 - API 35 installed the CI SDK-built and debug-signed output, launched `MainActivity` and ran **169 assertions** in the installed integration suite. `adb pull` of the installed `base.apk` matched that build byte-for-byte. No fatal app exception was found in the captured AndroidRuntime window. API **26 and 36** each installed the **same hash** without the test APK, completed a visible two-step task and recovered without replay after being force-stopped at the exact-number approval screen.

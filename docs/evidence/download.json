@@ -1,0 +1,13 @@
+{
+  "distribution": "public debug prerelease",
+  "release": "https://github.com/Pillow1243/android-Jarvis/releases/tag/v1.0.0-debug.1",
+  "download_url": "https://github.com/Pillow1243/android-Jarvis/releases/download/v1.0.0-debug.1/JARVIS-NEXUS.apk",
+  "checksum_url": "https://github.com/Pillow1243/android-Jarvis/releases/download/v1.0.0-debug.1/SHA256SUMS.txt",
+  "bytes": 397905,
+  "sha256": "cdd3b85458b5b5149095048b1b294c1ddec4c461c9adeef0fab7ef18ae5f9848",
+  "tested_source": "113afbd15894ba002330399a0256f1cbe09110b1",
+  "release_tag_target": "65448a8383eab59c88a4b262cda91f89389fde4b",
+  "device_verification": "https://github.com/Pillow1243/android-Jarvis/actions/runs/44384092541",
+  "public_readback_verification": "https://github.com/Pillow1243/android-Jarvis/actions/runs/44386951244/job/135093989229",
+  "result": "Unauthenticated HTTPS download compared byte-for-byte with the installed-device candidate. Downloaded SHA256SUMS.txt also passed."
+}
