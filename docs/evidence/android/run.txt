@@ -1,8 +1,9 @@
 INSTRUMENTATION_RESULT: stream=
 NEXUS_TESTS_FAILED
-java.lang.AssertionError: Timed out: return from dialer
-	at ai.nexus.test.NexusInstrumentation.waitFor(NexusInstrumentation.java:29)
-	at ai.nexus.test.NexusInstrumentation.contacts(NexusInstrumentation.java:48)
+java.lang.AssertionError: Expected completed, got failed: No matching phone contact. Try a shorter name or enter a number.
+	at ai.nexus.test.NexusInstrumentation.ok(NexusInstrumentation.java:27)
+	at ai.nexus.test.NexusInstrumentation.stage(NexusInstrumentation.java:30)
+	at ai.nexus.test.NexusInstrumentation.contacts(NexusInstrumentation.java:47)
 	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:41)
 	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
 
