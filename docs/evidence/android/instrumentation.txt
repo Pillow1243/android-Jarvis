@@ -1,0 +1,11 @@
+PASS  Planner, Farsi normalization, schemas, registry and error classification
+PASS  Six native destinations; provider form validation, encrypted BYOK save/read/remove
+PASS  Entered two-step instruction through UI; verified real OS reads, duplicate guard, absent app and missing key
+PASS  SQLite create/edit/read/delete, fresh handle persistence, paused memory, secret guard and runnable shortcut
+FAIL  java.lang.AssertionError: Timed out: return from dialer
+	at ai.nexus.test.NexusInstrumentation.waitFor(NexusInstrumentation.java:29)
+	at ai.nexus.test.NexusInstrumentation.contacts(NexusInstrumentation.java:48)
+	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:41)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
+
+Assertions: 101
