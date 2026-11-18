@@ -52,6 +52,14 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
   private Consumer<Boolean> permissionCb;
   private boolean redrawQueued;
   private int y;
+  private boolean resumedOnce, lowRam;
+  private String chromeKey = "";
+  private final Runnable releaseLayer = () -> {
+    if (body != null && body.getLayerType() != View.LAYER_TYPE_NONE) body.setLayerType(
+      View.LAYER_TYPE_NONE,
+      null
+    );
+  };
   private String exportJson;
 
   @Override
@@ -92,7 +100,7 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
         if (!isDestroyed()) {
           apps = list;
           indexed = true;
-          changed();
+          if (!tab.equals("home")) changed();
         }
       });
     });
@@ -131,6 +139,28 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
     root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
     body = k.col();
     scroll.addView(body);
+    lowRam = getSystemService(ActivityManager.class).isLowRamDevice();
+    // During scroll a settled Home can be composited as one texture rather than repainted per row.
+    // Bound both dimensions and bytes; never keep an idle allocation or cache dynamic voice output.
+    scroll.setOnScrollChangeListener((v, x, sy, oldX, oldY) -> {
+      if (
+        lowRam ||
+        !tab.equals("home") ||
+        !active ||
+        !voiceState.equals("idle") ||
+        agent.running ||
+        !v.isHardwareAccelerated()
+      ) return;
+      int w = body.getWidth(),
+        h = body.getHeight();
+      if (w <= 0 || h <= 0 || w > 4096 || h > 4096 || (long) w * h * 4 > 16 * 1024 * 1024) return;
+      if (body.getLayerType() != View.LAYER_TYPE_HARDWARE) body.setLayerType(
+        View.LAYER_TYPE_HARDWARE,
+        null
+      );
+      main.removeCallbacks(releaseLayer);
+      main.postDelayed(releaseLayer, 300);
+    });
     nav = k.row();
     k.add(root, nav, -1, 60);
   }
@@ -170,9 +200,45 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
     root.setBackgroundColor(k.bg);
     getWindow().setStatusBarColor(k.bg);
     getWindow().setNavigationBarColor(k.bg);
+    String chrome =
+      tab +
+      ":" +
+      fa +
+      ":" +
+      k.bg +
+      ":" +
+      gemini.configured() +
+      ":" +
+      db.prefs.getBoolean("verified", false) +
+      ":" +
+      getResources().getDisplayMetrics().densityDpi +
+      ":" +
+      getResources().getConfiguration().fontScale;
+    if (!chromeKey.equals(chrome)) {
+      chromeKey = chrome;
+      chrome();
+    }
+    releaseLayer.run();
+    body.removeAllViews();
+    int gutter = Math.max(
+      18,
+      (int) ((getResources().getDisplayMetrics().widthPixels /
+            getResources().getDisplayMetrics().density -
+          660) /
+        2)
+    );
+    k.pad(body, gutter, 13, gutter, 22);
+    screens.draw(body, tab);
+    if (animate && motion()) {
+      body.setAlpha(.78f);
+      body.setTranslationY(k.d(5));
+      body.animate().alpha(1).translationY(0).setDuration(150).start();
+    }
+  }
+
+  private void chrome() {
     header.removeAllViews();
     nav.removeAllViews();
-    body.removeAllViews();
     k.pad(header, 20, 4, 16, 4);
     ImageView mark = new ImageView(this);
     mark.setImageResource(R.drawable.nexus_mark);
@@ -197,15 +263,6 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
     FrameLayout cog = k.glyph("sliders_horizontal", k.sub, 38, 18);
     k.tap(cog, () -> page("settings"), tr("Settings", "تنظیمات"));
     k.add(header, cog, 40, 40);
-    int gutter = Math.max(
-      18,
-      (int) ((getResources().getDisplayMetrics().widthPixels /
-            getResources().getDisplayMetrics().density -
-          660) /
-        2)
-    );
-    k.pad(body, gutter, 13, gutter, 22);
-    screens.draw(body, tab);
     k.pad(nav, 5, 3, 5, 3);
     k.box(nav, k.card, 0, k.line);
     String[] names = { "home", "agent", "activity", "tools", "memory" },
@@ -230,11 +287,6 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
       k.add(slot, txt, -2, -2);
       k.tap(slot, () -> page(id), "nav_" + id);
       k.weight(nav, slot, 51);
-    }
-    if (animate && motion()) {
-      body.setAlpha(.78f);
-      body.setTranslationY(k.d(5));
-      body.animate().alpha(1).translationY(0).setDuration(150).start();
     }
   }
 
@@ -278,7 +330,6 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
       s.close();
       cb.accept(true);
     });
-    s.body.getChildAt(s.body.getChildCount() - 2).setFilterTouchesWhenObscured(true);
     s.action(tr("Decline", "رد کردن"), false, () -> {
       s.close();
       cb.accept(false);
@@ -653,13 +704,15 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
     active = true;
     if (agent != null) {
       agent.foregrounded();
-      changed();
+      if (resumedOnce) changed();
+      resumedOnce = true;
     }
   }
 
   @Override
   protected void onPause() {
     active = false;
+    releaseLayer.run();
     conversation = false;
     spokenInput = false;
     if (voice != null) voice.stop();

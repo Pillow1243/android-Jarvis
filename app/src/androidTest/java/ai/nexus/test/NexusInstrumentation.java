@@ -180,7 +180,7 @@ public final class NexusInstrumentation extends Instrumentation {
   public void onStart() {
     Bundle result = new Bundle();
     try {
-      auto = getUiAutomation();
+      auto = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
       auto.setRotation(UiAutomation.ROTATION_FREEZE_0);
       evidence = new File(getTargetContext().getFilesDir(), "evidence");
       evidence.mkdirs();
@@ -197,6 +197,8 @@ public final class NexusInstrumentation extends Instrumentation {
       scenario("platform", this::platform);
       scenario("cloud", this::cloudContract);
       scenario("lifecycle", this::lifecycle);
+      scenario("network", this::testDeviceNetwork);
+      scenario("accessibility", this::accessibilityFlow);
       if (failures != 0) throw new AssertionError(
         failures + " device scenario(s) failed; see instrumentation.txt"
       );
@@ -508,6 +510,34 @@ public final class NexusInstrumentation extends Instrumentation {
       );
       throw new AssertionError("incomplete accepted");
     } catch (Gemini.Failure expected) {}
+    String untrusted = "REFERENCE_SENTINEL";
+    JSONArray first = J.arr(Gemini.user("actual task"), stream.content);
+    JSONObject wire = Gemini.plannerRequest(first, a.tools.declarations(), untrusted, "English");
+    ok(
+      !wire.getJSONObject("systemInstruction").toString().contains(untrusted) &&
+        wire
+          .getJSONArray("contents")
+          .getJSONObject(0)
+          .getJSONArray("parts")
+          .getJSONObject(0)
+          .getString("text")
+          .contains(untrusted),
+      "Untrusted context remains out of system instructions"
+    );
+    ok(
+      !first.getJSONObject(0).toString().contains(untrusted) &&
+        wire.getJSONArray("contents").getJSONObject(1).toString().equals(stream.content.toString()),
+      "History is immutable and signature content is preserved"
+    );
+    try {
+      Gemini.readStream(
+        new BufferedReader(new StringReader(new String(new char[270000]).replace('\0', 'x'))),
+        q -> {}
+      );
+      throw new AssertionError("Unbounded line accepted");
+    } catch (Gemini.Failure size) {
+      ok(size.code.equals("oversize"), "Unterminated oversized stream fails closed");
+    }
     final int[] rounds = { 0 };
     Provider stub = new Provider() {
       public void cancel() {}
@@ -563,6 +593,158 @@ public final class NexusInstrumentation extends Instrumentation {
     );
   }
 
+  private String serviceName() {
+    return a.getString(ai.nexus.R.string.service_name);
+  }
+
+  private boolean enterServiceSettings() throws Exception {
+    action(a.controls::access);
+    click("Open Android accessibility settings");
+    waitFor(() -> pkg().equals("com.android.settings"), "public accessibility settings");
+    for (int i = 0; i < 6; i++) {
+      if (find(auto.getRootInActiveWindow(), serviceName()) != null) {
+        click(serviceName());
+        return true;
+      }
+      if (find(auto.getRootInActiveWindow(), "Downloaded apps") != null && i == 0) {
+        click("Downloaded apps");
+        continue;
+      }
+      android.util.DisplayMetrics dm = a.getResources().getDisplayMetrics();
+      int cx = dm.widthPixels / 2;
+      shell(
+        "input swipe " +
+          cx +
+          " " +
+          (dm.heightPixels * 3) / 4 +
+          " " +
+          cx +
+          " " +
+          dm.heightPixels / 3 +
+          " 300"
+      );
+      SystemClock.sleep(200);
+    }
+    return false;
+  }
+
+  private String toggleLabel() {
+    for (String label : Arrays.asList("Use " + serviceName(), "Use service"))
+      if (find(auto.getRootInActiveWindow(), label) != null) return label;
+    return "";
+  }
+
+  private void accessibilityFlow() throws Exception {
+    List<String> log = new ArrayList<>();
+    boolean enabled = false;
+    try {
+      // No secure settings writes, automatic grants, or bypass of Android's restricted settings.
+      if (!enterServiceSettings()) {
+        log.add("NOT VERIFIED: service not offered by Android settings.");
+        return;
+      }
+      SystemClock.sleep(600);
+      String toggle = toggleLabel();
+      if (toggle.isEmpty()) {
+        log.add("NOT VERIFIED: Android did not offer the service toggle.");
+        return;
+      }
+      click(toggle);
+      SystemClock.sleep(400);
+      if (find(auto.getRootInActiveWindow(), "Allow") != null) click("Allow");
+      if (!ui(() -> ai.nexus.accessibility.WindowReceiptService.connected())) SystemClock.sleep(900);
+      enabled = ui(() -> ai.nexus.accessibility.WindowReceiptService.connected());
+      if (!enabled) {
+        log.add(
+          "NOT VERIFIED: no OS service connection after the visible opt-in; restriction not bypassed."
+        );
+        return;
+      }
+      log.add("Verified: opt-in via in-app disclosure, Android settings switch and OS confirmation.");
+      returnToNexus();
+      action(() -> a.run(new Call("open_panel", "panel", "display")));
+      waitFor(() -> ui(() -> !a.agent.running), "observed settings window");
+      log.add("Open Display: " + ui(() -> a.agent.steps.get(0).code));
+      returnToNexus();
+      action(() -> a.run(new Call("display_walkthrough")));
+      click("Approve action");
+      waitFor(() -> ui(() -> !a.agent.running), "manual Display scroll result");
+      log.add("Manual Display walkthrough: " + ui(() -> a.agent.steps.get(0).code));
+      returnToNexus();
+    } finally {
+      try {
+        if (enabled) {
+          if (!pkg().equals("ai.nexus")) returnToNexus();
+          ok(enterServiceSettings(), "Service available for opt-out");
+          SystemClock.sleep(400);
+          click(toggleLabel());
+          SystemClock.sleep(300);
+          for (String label : Arrays.asList("Stop", "Turn off", "OK"))
+            if (find(auto.getRootInActiveWindow(), label) != null) {
+              click(label);
+              break;
+            }
+          waitFor(
+            () -> ui(() -> !ai.nexus.accessibility.WindowReceiptService.connected()),
+            "user opt-out"
+          );
+          log.add("Verified: service disconnected after native opt-out.");
+        }
+      } finally {
+        try (PrintWriter w = new PrintWriter(new File(evidence, "accessibility.txt"), "UTF-8")) {
+          for (String l : log) w.println(l);
+        }
+        if (!pkg().equals("ai.nexus")) returnToNexus();
+      }
+    }
+  }
+
+  private void testDeviceNetwork() throws Exception {
+    // Exercise the shipped Android TLS client, using a deliberately invalid synthetic credential.
+    // Never provision a real API key to an emulator artifact, screenshot or instrumentation bundle.
+    int uid = android.os.Process.myUid();
+    long rx = android.net.TrafficStats.getUidRxBytes(uid),
+      tx = android.net.TrafficStats.getUidTxBytes(uid),
+      start = SystemClock.elapsedRealtime();
+    String result;
+    try {
+      a.vault.save("INVALID_QA_FIXTURE_NOT_A_REAL_KEY");
+      a.gemini.probe();
+      throw new AssertionError("Invalid credential passed");
+    } catch (Gemini.Failure e) {
+      result = e.code;
+      ok(
+        Arrays.asList("configuration", "offline", "timeout", "temporary", "quota").contains(result),
+        "Handled provider failure"
+      );
+    } finally {
+      a.vault.clear();
+    }
+    long endRx = android.net.TrafficStats.getUidRxBytes(uid),
+      endTx = android.net.TrafficStats.getUidTxBytes(uid);
+    try (PrintWriter w = new PrintWriter(new File(evidence, "device-network.txt"), "UTF-8")) {
+      w.println(
+        "probe=invalid_credential\nclient=installed_android_https\nresult=" +
+          result +
+          "\nverified=false\nelapsed_ms=" +
+          (SystemClock.elapsedRealtime() - start) +
+          "\nuid_received_bytes_delta=" +
+          (rx < 0 || endRx < 0 ? "unavailable" : endRx - rx) +
+          "\nuid_transmitted_bytes_delta=" +
+          (tx < 0 || endTx < 0 ? "unavailable" : endTx - tx)
+      );
+    }
+    ok(
+      !a.vault.present() && !a.db.prefs.getBoolean("verified", false),
+      "No credential or false verified state after negative probe"
+    );
+    record(
+      "Actual Android Gemini client with intentionally invalid key: " +
+        result +
+        "; not an authenticated model success"
+    );
+  }
+
   private void lifecycle() throws Exception {
     action(() -> a.run(new Call("share_text", "text", "No external effect")));
     node("Approve action");
@@ -578,7 +760,9 @@ public final class NexusInstrumentation extends Instrumentation {
     action(() -> {
       a.db.prefs.edit().putString("language", "fa").apply();
       a.page("home");
+      a.submit("گزارش دستگاه و بعد فهرست برنامه‌ها", false);
     });
+    stage("completed");
     waitFor(
       () ->
         ui(

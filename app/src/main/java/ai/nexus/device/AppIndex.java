@@ -11,7 +11,7 @@ public final class AppIndex {
 
     public final String name, pkg, cls;
 
-    App(String name, String pkg, String cls) {
+    public App(String name, String pkg, String cls) {
       this.name = name;
       this.pkg = pkg;
       this.cls = cls;
@@ -23,7 +23,7 @@ public final class AppIndex {
   }
 
   private static final String[][] ALIASES = {
-    { "com.whatsapp", "واتساپ", "واتس اپ", "whats app" },
+    { "com.whatsapp", "واتساپ", "واتس اپ", "واتس آپ", "whatsapp", "whats app" },
     { "org.telegram.messenger", "تلگرام", "telegram" },
     { "com.spotify.music", "اسپاتیفای", "spotify" },
     { "com.android.chrome", "کروم", "chrome" },
@@ -49,20 +49,27 @@ public final class AppIndex {
     return list;
   }
 
+  private static int rank(String q, String label) {
+    if (q.equals(label)) return 0;
+    if (q.length() > 1 && label.contains(q)) return 1;
+    return q.length() >= 4 && Text.distance(q, label) <= Math.min(2, q.length() / 4) ? 2 : 9;
+  }
+
   public static List<App> find(List<App> list, String query) {
     String q = Text.norm(query);
-    for (String[] a : ALIASES) for (int i = 1; i < a.length; i++) if (q.equals(a[i])) q = a[0];
     List<App> out = new ArrayList<>();
+    if (q.isEmpty()) return out;
     int best = 9;
     for (App a : list) {
-      String n = Text.norm(a.name);
-      int score = a.pkg.equals(q) || n.equals(q)
-        ? 0
-        : n.contains(q) && q.length() > 1
-          ? 1
-          : q.length() >= 4 && Text.distance(q, n) <= Math.min(2, q.length() / 4)
-            ? 2
-            : 9;
+      int score = a.pkg.equals(q) ? 0 : rank(q, Text.norm(a.name));
+      for (String[] aliases : ALIASES)
+        if (aliases[0].equals(a.pkg)) {
+          for (int i = 1; i < aliases.length && score != 0; i++) score = Math.min(
+            score,
+            rank(q, Text.norm(aliases[i]))
+          );
+          break;
+        }
       if (score < best) {
         out.clear();
         best = score;

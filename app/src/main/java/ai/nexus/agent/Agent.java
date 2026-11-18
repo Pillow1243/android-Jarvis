@@ -279,7 +279,7 @@ public final class Agent {
     String context =
       db.recentContext() +
       (db.memoryOn() ? priorDialogue : "") +
-      (lastApp.isEmpty() ? "" : " Last user-requested app: " + Text.clipped(lastApp, 80));
+      (!db.memoryOn() || lastApp.isEmpty() ? "" : " Last requested app: " + Text.clipped(lastApp, 80));
     deadline(55000, () -> {
       ai.cancel();
       finish("failed", t("Planner timed out.", "مهلت برنامه‌ریزی تمام شد."));

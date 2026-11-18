@@ -34,7 +34,24 @@ public final class ReminderReceiver extends BroadcastReceiver {
       .setAutoCancel(true)
       .build();
     try {
-      c.getSystemService(NotificationManager.class).notify((int) id, n);
+      NotificationManager nm = c.getSystemService(NotificationManager.class);
+      NotificationChannel chan = nm.getNotificationChannel(Reminders.CHANNEL);
+      if (
+        !nm.areNotificationsEnabled() ||
+        chan == null ||
+        chan.getImportance() == NotificationManager.IMPORTANCE_NONE
+      ) throw new SecurityException();
+      nm.notify((int) id, n);
+    } catch (SecurityException denied) {
+      // Permission/channel may change between scheduling and delivery. Leave a redacted failure, not a crash or a delivery claim.
+      boolean fa =
+        "fa".equals(s.prefs.getString("language", "auto")) ||
+        ("auto".equals(s.prefs.getString("language", "auto")) &&
+          !Locale.getDefault().getLanguage().equals("en"));
+      long task = s.task(fa ? "اعلان یادآور مسدود شد" : "Reminder notification blocked");
+      long step = s.step(task, "set_reminder");
+      s.updateStep(step, "failed", "notification_blocked");
+      s.end(task, "failed");
     } finally {
       s.removeReminder(id);
     }

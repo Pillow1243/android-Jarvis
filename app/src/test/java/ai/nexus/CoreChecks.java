@@ -3,6 +3,7 @@ package ai.nexus;
 import ai.nexus.ai.Gemini;
 import ai.nexus.automation.Reminders;
 import ai.nexus.core.*;
+import ai.nexus.device.AppIndex;
 import java.time.*;
 import java.util.*;
 
@@ -140,7 +141,15 @@ public final class CoreChecks {
     );
     eq(planner.plan("remind me at 12 am to study", "").get(0).get("time"), "00:00", "midnight reminder");
     eq(planner.plan("remind me at 24:00 to study", "").size(), 0, "reject invalid reminder");
-    return count + 3;
+    AppIndex.App whatsapp = new AppIndex.App("WhatsApp", "com.whatsapp", "Main");
+    List<AppIndex.App> installed = Arrays.asList(
+      whatsapp,
+      new AppIndex.App("WhatsApp Business", "com.whatsapp.w4b", "Main")
+    );
+    eq(AppIndex.find(installed, "واتساپ").get(0), whatsapp, "Persian alias on English device");
+    eq(AppIndex.find(installed, "وتساپ").get(0), whatsapp, "Persian misspelling on English device");
+    eq(AppIndex.find(installed, "WhatsApp").size(), 1, "exact match outranks substring");
+    return count + 6;
   }
 
   static void eq(Object a, Object b, String msg) {

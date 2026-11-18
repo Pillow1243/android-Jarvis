@@ -4,6 +4,8 @@ A native, Persian/English Android assistant that plans with Gemini and acts thro
 
 **Android 8.0+ · target SDK 36 · personal-key or managed-gateway mode · no local model or PC required.** This is a debug testing distribution, not a production-signed Play release.
 
+**[راهنمای فارسی نصب و استفاده](docs/FA.md)**
+
 ## Install and try it
 
 1. Download **[JARVIS-NEXUS.apk](delivery/JARVIS-NEXUS.apk)**. Compare its SHA-256 with [the device evidence](docs/evidence/android/apk.sha256).

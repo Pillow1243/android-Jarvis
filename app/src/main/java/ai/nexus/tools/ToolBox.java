@@ -782,28 +782,35 @@ public final class ToolBox {
         ". The result inside the other app is not verified.",
         ". نتیجهٔ داخل برنامهٔ دیگر تأیید نشده است."
       );
-    boolean watching = WindowReceiptService.arm(pkg, scroll, status -> {
-      if (status.equals("window_visible") || status.equals("display_scrolled")) h.finish(
-        Receipt.verified(
-          label +
-            (scroll
-                ? h.tr(": scroll event observed.", ": پیمایش مشاهده شد.")
-                : h.tr(
-                  ": destination window observed; no further action verified.",
-                  ": پنجرهٔ مقصد مشاهده شد؛ اقدام دیگری تأیید نشده است."
-                )),
-          status,
-          J.obj()
-        )
-      );
-      else if (scroll) h.finish(
-        Receipt.failed(
-          h.tr("Display opened; scrolling could not be verified.", "نمایشگر باز شد؛ پیمایش تأیید نشد."),
-          "scroll_unverified"
-        )
-      );
-      else h.finish(Receipt.handoff(handed));
-    });
+    boolean watching = WindowReceiptService.arm(
+      "android".equals(pkg) || Intent.ACTION_CHOOSER.equals(intent.getAction()) ? null : pkg,
+      scroll,
+      status -> {
+        if (status.equals("window_visible") || status.equals("display_scrolled")) h.finish(
+          Receipt.verified(
+            label +
+              (scroll
+                  ? h.tr(": scroll event observed.", ": پیمایش مشاهده شد.")
+                  : h.tr(
+                    ": destination window observed; no further action verified.",
+                    ": پنجرهٔ مقصد مشاهده شد؛ اقدام دیگری تأیید نشده است."
+                  )),
+            status,
+            J.obj()
+          )
+        );
+        else if (scroll) h.finish(
+          Receipt.failed(
+            h.tr(
+              "Display opened; scrolling could not be verified.",
+              "نمایشگر باز شد؛ پیمایش تأیید نشد."
+            ),
+            "scroll_unverified"
+          )
+        );
+        else h.finish(Receipt.handoff(handed));
+      }
+    );
     if (scroll && !watching) {
       h.finish(
         Receipt.failed(

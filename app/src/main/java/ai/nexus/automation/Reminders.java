@@ -55,6 +55,7 @@ public final class Reminders {
   }
 
   public static long schedule(Context c, Store s, long at, String text) {
+    channel(c);
     NotificationManager nm = c.getSystemService(NotificationManager.class);
     if (
       !nm.areNotificationsEnabled() ||

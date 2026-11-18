@@ -14,6 +14,12 @@ import android.widget.*;
 public final class Kit {
 
   public final Activity a;
+  private final java.util.Map<String, Integer> iconIds = new java.util.HashMap<>();
+  private static final Typeface[] FONTS = {
+    Typeface.create("sans-serif", 0),
+    Typeface.create("sans-serif-medium", 0),
+    Typeface.create("monospace", 0),
+  };
   public boolean rtl;
   public int bg = 0xff0c100f,
     card = 0xff151b19,
@@ -98,9 +104,18 @@ public final class Kit {
   }
 
   public void gap(LinearLayout v, int size) {
-    View g = new View(a);
-    if (v.getOrientation() == LinearLayout.VERTICAL) add(v, g, 1, size);
-    else add(v, g, size, 1);
+    // Trailing margins avoid a separate measured/rendered View for every spacer.
+    boolean column = v.getOrientation() == LinearLayout.VERTICAL;
+    if (v.getChildCount() == 0) {
+      Space first = new Space(a);
+      add(v, first, column ? 1 : size, column ? size : 1);
+      return;
+    }
+    View last = v.getChildAt(v.getChildCount() - 1);
+    LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) last.getLayoutParams();
+    if (column) lp.bottomMargin += d(size);
+    else lp.setMarginEnd(lp.getMarginEnd() + d(size));
+    last.setLayoutParams(lp);
   }
 
   public TextView text(String s, float size, int color, int style) {
@@ -109,12 +124,7 @@ public final class Kit {
     v.setTextColor(color);
     v.setTextSize(size);
     v.setIncludeFontPadding(false);
-    v.setTypeface(
-      Typeface.create(
-        style == 2 ? "monospace" : style == 1 ? "sans-serif-medium" : "sans-serif",
-        Typeface.NORMAL
-      )
-    );
+    v.setTypeface(FONTS[style]);
     if (style == 2 && !rtl) v.setLetterSpacing(.07f);
     v.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
     v.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG);
@@ -128,7 +138,9 @@ public final class Kit {
 
   public ImageView icon(String name, int color) {
     ImageView i = new ImageView(a);
-    int id = a.getResources().getIdentifier("ic_" + name, "drawable", a.getPackageName());
+    int id = iconIds.computeIfAbsent(name, n ->
+      a.getResources().getIdentifier("ic_" + n, "drawable", a.getPackageName())
+    );
     i.setImageResource(id);
     i.setColorFilter(color);
     i.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -164,6 +176,7 @@ public final class Kit {
     b.setMinHeight(d(48));
     pad(b, 12, 10, 12, 10);
     box(b, primary ? LIME : raised, 14, primary ? 0 : line);
+    b.setFilterTouchesWhenObscured(true);
     tap(b, cb, s);
     return b;
   }
