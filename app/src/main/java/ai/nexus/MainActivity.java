@@ -439,6 +439,7 @@ public final class MainActivity extends Activity implements Agent.UI, Voice.List
       submit(q, false);
     };
     s.action(tr("Run command", "اجرای فرمان"), true, send);
+    s.action(tr("Cancel", "انصراف"), false, s::close);
     s.show();
     e.requestFocus();
     e.setSelection(e.length());

@@ -23,7 +23,7 @@ import org.json.*;
 /** Runs inside the actual installed application; use adb shell am instrument -w. No test hooks in production. */
 public final class NexusInstrumentation extends Instrumentation {
 
-  private MainActivity a;
+  private volatile MainActivity a;
   private UiAutomation auto;
   private File evidence;
   private final List<String> results = new ArrayList<>();
@@ -65,7 +65,23 @@ public final class NexusInstrumentation extends Instrumentation {
     void run() throws Exception;
   }
 
+  private void phase(String name) throws IOException {
+    try (PrintWriter w = new PrintWriter(new File(evidence, "scenario-progress.txt"), "UTF-8")) {
+      w.println(name);
+    }
+    Bundle b = new Bundle();
+    b.putString("nexus_phase", name);
+    sendStatus(1, b);
+  }
+
+  @Override
+  public void callActivityOnResume(Activity activity) {
+    super.callActivityOnResume(activity);
+    if (activity instanceof MainActivity) a = (MainActivity) activity;
+  }
+
   private void scenario(String name, Scenario task) throws Exception {
+    phase(name);
     try {
       task.run();
     } catch (Throwable error) {
@@ -101,9 +117,10 @@ public final class NexusInstrumentation extends Instrumentation {
 
   private <T> T ui(Callable<T> op) {
     java.util.concurrent.FutureTask<T> f = new java.util.concurrent.FutureTask<>(op);
-    runOnMainSync(f);
+    if (Looper.myLooper() == Looper.getMainLooper()) f.run();
+    else new Handler(Looper.getMainLooper()).post(f);
     try {
-      return f.get();
+      return f.get(10, java.util.concurrent.TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new AssertionError(e);
     }
@@ -220,8 +237,10 @@ public final class NexusInstrumentation extends Instrumentation {
       Intent launch = new Intent(getTargetContext(), MainActivity.class).addFlags(
         Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK
       );
-      a = (MainActivity) startActivitySync(launch);
-      waitFor(() -> ui(() -> a.indexed && a.active), "foreground application index");
+      phase("launch");
+      getTargetContext().startActivity(launch);
+      waitFor(() -> a != null && ui(() -> a.indexed && a.active), "foreground application index");
+      phase("navigation");
       programTests();
       navigation();
       scenario("sequence", this::sequence);
@@ -474,7 +493,7 @@ public final class NexusInstrumentation extends Instrumentation {
   }
 
   private void returnToNexus() throws Exception {
-    shell("am start -W --activity-reorder-to-front --activity-single-top -n ai.nexus/.MainActivity");
+    shell("am start --activity-reorder-to-front --activity-single-top -n ai.nexus/.MainActivity");
     waitFor(
       () -> ui(() -> a.active) && pkg().equals("ai.nexus"),
       "Nexus foreground after explicit user return"
@@ -870,8 +889,11 @@ public final class NexusInstrumentation extends Instrumentation {
       node("command_text") != null && node("device report") != null && !a.agent.running,
       "Uncertain speech recognition result enters editable review, not dispatch"
     );
-    shell("input keyevent 4");
-    if (find(auto.getRootInActiveWindow(), "command_text") != null) shell("input keyevent 4");
+    click("Cancel");
+    waitFor(
+      () -> pkg().equals("ai.nexus") && find(auto.getRootInActiveWindow(), "command_text") == null,
+      "review dismissed without an action"
+    );
     record(
       "Real foreground handoffs: Chrome sequence=" +
         first +
