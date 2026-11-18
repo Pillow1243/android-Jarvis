@@ -482,9 +482,7 @@ public final class ToolBox {
             "&body=" +
             Uri.encode(c.get("text"))
         );
-        h.commit(c.get("to") + "\n" + c.get("subject") + "\n\n" + c.get("text"), () ->
-          launch(h, new Intent(Intent.ACTION_SENDTO, uri), h.tr("Email draft", "پیش‌نویس ایمیل"), false)
-        );
+        prepareEmail(c, h, new Intent(Intent.ACTION_SENDTO, uri));
       }
     );
     add(
@@ -711,6 +709,62 @@ public final class ToolBox {
       default:
         return Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_BROWSER);
     }
+  }
+
+  // Some devices register SMS/MMS clients for mailto as well. Do not let an implicit default
+  // silently pick one. Prefer dedicated email apps; otherwise ask about the handler explicitly.
+  private static void prepareEmail(Call c, Invocation h, Intent draft) {
+    PackageManager pm = h.activity().getPackageManager();
+    Set<String> dedicated = new HashSet<>();
+    for (ResolveInfo r : pm.queryIntentActivities(
+      new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_EMAIL),
+      0
+    ))
+      if (r.activityInfo != null) dedicated.add(r.activityInfo.packageName);
+    Map<String, String> all = new TreeMap<>(),
+      mail = new TreeMap<>();
+    for (ResolveInfo r : pm.queryIntentActivities(draft, PackageManager.MATCH_DEFAULT_ONLY)) {
+      if (r.activityInfo == null || !r.activityInfo.exported || !r.activityInfo.enabled) continue;
+      String pkg = r.activityInfo.packageName,
+        label = r.activityInfo.applicationInfo.loadLabel(pm) + "\n" + pkg;
+      all.put(pkg, label);
+      if (dedicated.contains(pkg)) mail.put(pkg, label);
+    }
+    Map<String, String> choices = mail.isEmpty() ? all : mail;
+    if (choices.isEmpty()) {
+      h.finish(
+        Receipt.failed(
+          h.tr(
+            "No application is available for an email draft.",
+            "هیچ برنامه‌ای برای پیش‌نویس ایمیل در دسترس نیست."
+          ),
+          "no_handler"
+        )
+      );
+      return;
+    }
+    List<String> packages = new ArrayList<>(choices.keySet());
+    Consumer<Integer> select = i -> {
+      String pkg = packages.get(i);
+      String exact =
+        c.get("to") +
+        "\n" +
+        c.get("subject") +
+        "\n\n" +
+        c.get("text") +
+        "\n\n" +
+        h.tr("Destination app: ", "برنامهٔ مقصد: ") +
+        pkg;
+      h.commit(exact, () ->
+        launch(h, new Intent(draft).setPackage(pkg), h.tr("Email draft", "پیش‌نویس ایمیل"), false)
+      );
+    };
+    if (mail.size() == 1) select.accept(0);
+    else h.choose(
+      h.tr("Choose an email application", "انتخاب برنامهٔ ایمیل"),
+      new ArrayList<>(choices.values()),
+      select
+    );
   }
 
   private void people(Invocation h, String q, Consumer<List<People.Person>> done) {

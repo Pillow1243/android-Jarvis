@@ -708,6 +708,19 @@ public final class NexusInstrumentation extends Instrumentation {
       "SMS composer or system resolver"
     );
     returnToNexus();
+    // Observe without intercepting: returning null lets the real Android startActivity run.
+    java.util.concurrent.atomic.AtomicReference<Intent> sent =
+      new java.util.concurrent.atomic.AtomicReference<>();
+    Instrumentation.ActivityMonitor watch = new Instrumentation.ActivityMonitor() {
+      @Override
+      public ActivityResult onStartActivity(Intent intent) {
+        if (
+          Intent.ACTION_SENDTO.equals(intent.getAction()) && "mailto".equals(intent.getScheme())
+        ) sent.set(new Intent(intent));
+        return null;
+      }
+    };
+    addMonitor(watch);
     action(() ->
       a.run(
         new Call(
@@ -721,13 +734,51 @@ public final class NexusInstrumentation extends Instrumentation {
         )
       )
     );
-    ok(node("qa@example.invalid\nNexus QA\n\nUnsent fixture") != null, "Native email exact preview");
+    waitFor(
+      () ->
+        ui(
+          () ->
+            a.agent.stage.equals("approval") || a.agent.stage.equals("clarifying") || !a.agent.running
+        ),
+      "resolved mail applications"
+    );
+    String gmail = "com.google.android.gm";
+    if (ui(() -> a.agent.stage.equals("clarifying"))) {
+      String label = a
+        .getPackageManager()
+        .getApplicationLabel(a.getPackageManager().getApplicationInfo(gmail, 0))
+        .toString();
+      click(label + "\n" + gmail);
+    }
+    ok(
+      node("qa@example.invalid\nNexus QA\n\nUnsent fixture\n\nDestination app: " + gmail) != null,
+      "Exact email recipient, subject, body and destination package"
+    );
     click("Approve action");
     stage("handoff");
-    String email = external(
-      router + "|com.google.android.gm|com.android.email",
-      "mail destination or Android resolver"
+    Intent actual = sent.get();
+    removeMonitor(watch);
+    ok(
+      actual != null &&
+        gmail.equals(actual.getPackage()) &&
+        "mailto:qa@example.invalid?subject=Nexus%20QA&body=Unsent%20fixture".equals(
+          actual.getDataString()
+        ),
+      "Actual non-intercepted Android email intent is limited to the approved app and exact draft"
     );
+    long until = SystemClock.uptimeMillis() + 4000;
+    String email;
+    do {
+      email = pkg();
+      if (email.equals(gmail)) break;
+      SystemClock.sleep(150);
+    } while (SystemClock.uptimeMillis() < until);
+    email =
+      "dispatched to " +
+      gmail +
+      ", visible=" +
+      (email.isEmpty() ? "not observed" : email) +
+      " (mailbox not verified)";
     returnToNexus();
     action(() -> a.result("device report", true));
     ok(
@@ -792,6 +843,17 @@ public final class NexusInstrumentation extends Instrumentation {
     return "";
   }
 
+  private String waitToggle() {
+    long until = SystemClock.uptimeMillis() + 4500;
+    String label;
+    do {
+      label = toggleLabel();
+      if (!label.isEmpty()) return label;
+      SystemClock.sleep(150);
+    } while (SystemClock.uptimeMillis() < until);
+    return "";
+  }
+
   private void accessibilityFlow() throws Exception {
     List<String> log = new ArrayList<>();
     boolean enabled = false;
@@ -801,8 +863,7 @@ public final class NexusInstrumentation extends Instrumentation {
         log.add("NOT VERIFIED: service not offered by Android settings.");
         return;
       }
-      SystemClock.sleep(600);
-      String toggle = toggleLabel();
+      String toggle = waitToggle();
       if (toggle.isEmpty()) {
         log.add("NOT VERIFIED: Android did not offer the service toggle.");
         return;
@@ -834,8 +895,7 @@ public final class NexusInstrumentation extends Instrumentation {
         if (enabled) {
           if (!pkg().equals("ai.nexus")) returnToNexus();
           ok(enterServiceSettings(), "Service available for opt-out");
-          SystemClock.sleep(400);
-          click(toggleLabel());
+          click(waitToggle());
           SystemClock.sleep(300);
           for (String label : Arrays.asList("Stop", "Turn off", "OK"))
             if (find(auto.getRootInActiveWindow(), label) != null) {
