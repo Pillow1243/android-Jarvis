@@ -579,8 +579,22 @@ public final class NexusInstrumentation extends Instrumentation {
       a.db.prefs.edit().putString("language", "fa").apply();
       a.page("home");
     });
+    waitFor(
+      () ->
+        ui(
+          () ->
+            a.getResources().getConfiguration().orientation ==
+              android.content.res.Configuration.ORIENTATION_PORTRAIT &&
+            a.fa &&
+            a.getWindow().getDecorView().findViewById(android.R.id.content).getWidth() <
+            a.getWindow().getDecorView().getHeight()
+        ),
+      "portrait Persian layout after rotation"
+    );
+    ok(node("مرکز فرمان") != null && node("خانه") != null, "Persian localized home and navigation");
+    auto.waitForIdle(300, 4000);
+    SystemClock.sleep(750);
     shot("persian-home");
-    ok(node("مرکز فرمان") != null, "Persian localized home");
     shell("input keyevent 3");
     waitFor(() -> ui(() -> !a.active), "app background");
     ok(!a.voice.listening, "No background listening");

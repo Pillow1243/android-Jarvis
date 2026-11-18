@@ -14,6 +14,8 @@ public final class CoreChecks {
     LocalPlanner planner = new LocalPlanner();
     String[][] samples = {
       { "Open Spotify", "launch_app" },
+      { "اگر اسپاتیفای نصب بود، بازش کن", "find_app,launch_app" },
+      { "منو به نزدیک‌ترین داروخانه ببر", "maps" },
       { "recall note homework", "recall_note" },
       { "جرویس، واتساپ رو باز کن.", "launch_app" },
       { "برو داخل تنظیمات وای‌فای", "open_panel" },
@@ -131,7 +133,14 @@ public final class CoreChecks {
       throw new AssertionError("Invalid hour accepted");
     } catch (DateTimeException expected) {}
     count += 2;
-    return count;
+    eq(
+      planner.plan("ساعت هشت شب یادآوری کن که درس بخونم", "").get(0).get("time"),
+      "20:00",
+      "Persian evening"
+    );
+    eq(planner.plan("remind me at 12 am to study", "").get(0).get("time"), "00:00", "midnight reminder");
+    eq(planner.plan("remind me at 24:00 to study", "").size(), 0, "reject invalid reminder");
+    return count + 3;
   }
 
   static void eq(Object a, Object b, String msg) {

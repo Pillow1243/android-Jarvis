@@ -27,7 +27,7 @@ The provider cannot run code, open arbitrary intent schemes, invoke UI gestures,
 
 | Code | Responsibility |
 |---|---|
-| `MainActivity`, `ui/Kit`, `Console`, `Controls`, `SignalField` | Bilingual native UI, six destinations, modal gates, foreground state, system insets, visualizations and real counters. Signal rendering uses batched paths; stops off-screen, respects motion preferences and Android animation disablement. |
+| `MainActivity`, `ui/Kit`, `Console`, `Controls`, `SignalField` | Bilingual native UI, six destinations, modal gates, foreground state, system insets, visualizations and real counters. One cached, procedurally authored mesh texture plus Canvas transforms and live RMS overlays. Standby settles after one second; active drawing stops off-screen and respects reduced motion. |
 | `core/LocalPlanner`, `Text`, `Call`, `Spec`, `PermissionPolicy` | Deterministic multi-step grammar, Persian normalization, typed input/output contracts, enum/length/control-character checks and conditional runtime-permission requirements. Message bodies do not pass through name normalization. |
 | `agent/Agent` | Single main-thread state machine with asynchronous provider and device reads. Task generation and step identity guard every callback. One-shot commit requires a live foreground owner. |
 | `ai/Gemini`, `Provider` | Official REST model metadata, function-calling probe, full model content/signature round-trip, streamed responses, response-size and budget checks. The test adapter is injected **only in instrumentation**. |

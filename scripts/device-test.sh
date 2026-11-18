@@ -27,12 +27,25 @@ for f in $(adb shell run-as ai.nexus ls files/evidence/ | tr -d '\r' | grep -E '
 if grep -q NEXUS_TESTS_PASSED "$out/run.txt"; then
   # Instrumentation ends the target process. Sample the actual relaunched foreground app.
   adb shell am start -W -n ai.nexus/.MainActivity > "$out/relaunch.txt"
+  # Measure two different workloads. After standby settles it should not redraw perpetually.
+  sleep 3
   adb shell dumpsys gfxinfo ai.nexus reset >/dev/null
   sleep 5
+  adb shell dumpsys gfxinfo ai.nexus > "$out/idle-frames.txt"
+  adb shell dumpsys gfxinfo ai.nexus reset >/dev/null
+  for i in 1 2 3; do adb shell input swipe 480 1800 480 500 250; adb shell input swipe 480 500 480 1800 250; done
+  # TrafficStats includes this application UID only; no system-wide packet dump or payload capture.
+  uid=$(adb shell pm list packages -U ai.nexus | sed -n 's/^package:ai.nexus uid:\([0-9]*\).*/\1/p' | tr -d '\r')
+  if [[ "$uid" =~ ^[0-9]+$ ]]; then
+    { echo "UID: $uid. OS accounting snapshot on disposable emulator (not a long-run power or network benchmark).";
+      adb shell dumpsys netstats detail | grep -E "uid=$uid([^0-9]|$)" | head -30 || true; } > "$out/network.txt"
+    adb shell dumpsys batterystats --charged ai.nexus | head -450 > "$out/power.txt" || true
+  fi
 fi
 adb shell dumpsys meminfo ai.nexus > "$out/memory.txt"
 adb shell dumpsys gfxinfo ai.nexus > "$out/frames.txt"
 adb logcat -d -s AndroidRuntime:E > "$out/runtime-errors.txt"
+if grep -Fq 'FATAL EXCEPTION' "$out/runtime-errors.txt" && grep -Fq 'Process: ai.nexus' "$out/runtime-errors.txt"; then echo '::error::App crash in emulator log'; exit 1; fi
 sha256sum "$apk" | cut -d' ' -f1 > "$out/apk.sha256"
 if ! grep -q NEXUS_TESTS_PASSED "$out/run.txt"; then adb shell uiautomator dump /sdcard/nexus-qa.xml >/dev/null || true; adb pull /sdcard/nexus-qa.xml "$out/failure-ui.xml" || true; echo "::error::$(grep -E 'AssertionError|Exception|Timed out' "$out/run.txt" | head -1)"; exit 1; fi
 adb shell am broadcast -a ai.nexus.test.SEED -n ai.nexus.test/ai.nexus.test.FixtureContacts --ez clear true

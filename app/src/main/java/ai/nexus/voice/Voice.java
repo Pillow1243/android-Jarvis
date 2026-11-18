@@ -33,6 +33,12 @@ public final class Voice {
   public Voice(Activity a, Listener l) {
     this.a = a;
     this.l = l;
+    // Text-only startup need not bind an audio engine before first paint.
+    main.postDelayed(this::initTts, 1100);
+  }
+
+  private void initTts() {
+    if (closed || tts != null) return;
     tts = new TextToSpeech(a, status -> {
       ready = status == TextToSpeech.SUCCESS && !closed;
     });
@@ -80,6 +86,8 @@ public final class Voice {
       last = "";
       rec.setRecognitionListener(
         new RecognitionListener() {
+          private float measuredRms;
+
           private boolean live() {
             return generation == g && !closed;
           }
@@ -91,7 +99,10 @@ public final class Voice {
           public void onBeginningOfSpeech() {}
 
           public void onRmsChanged(float r) {
-            if (live()) l.audio(Math.max(0, Math.min(1, (r + 2) / 12f)), last);
+            if (live()) {
+              measuredRms = Math.max(0, Math.min(1, (r + 2) / 12f));
+              l.audio(measuredRms, last);
+            }
           }
 
           public void onBufferReceived(byte[] b) {}
@@ -107,7 +118,7 @@ public final class Voice {
             ArrayList<String> s = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
             if (s != null && !s.isEmpty()) {
               last = s.get(0);
-              l.audio(.35f, last);
+              l.audio(measuredRms, last);
             }
           }
 
@@ -200,6 +211,10 @@ public final class Voice {
       tts.speak(Text.clipped(text, 400), TextToSpeech.QUEUE_FLUSH, null, utterance) ==
       TextToSpeech.SUCCESS;
     if (speaking) l.state("speaking");
+    else l.error(
+      "The speech engine rejected playback. The text result is ready.",
+      "موتور گفتار پخش صدا را نپذیرفت؛ نتیجهٔ متنی آماده است."
+    );
     return speaking;
   }
 
@@ -215,6 +230,7 @@ public final class Voice {
   public void close() {
     closed = true;
     stop();
+    main.removeCallbacksAndMessages(null);
     if (tts != null) tts.shutdown();
   }
 }

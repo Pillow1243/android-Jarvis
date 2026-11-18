@@ -36,7 +36,6 @@ public final class Console {
   }
 
   public void draw(LinearLayout v, String tab) {
-    fieldView = null;
     transcript = null;
     switch (tab) {
       case "agent":
@@ -77,7 +76,7 @@ public final class Console {
   }
 
   public void audio(float rms, String text) {
-    if (fieldView != null) fieldView.level(rms);
+    if (fieldView != null && fieldView.isAttachedToWindow()) fieldView.level(rms);
     if (transcript != null && !text.isEmpty()) transcript.setText(Text.clipped(text, 60));
   }
 
@@ -215,7 +214,10 @@ public final class Console {
     FrameLayout hero = new FrameLayout(a);
     k.box(hero, 0xff102219, 20, 0xff39543d);
     hero.setClipToOutline(true);
-    fieldView = new SignalField(a);
+    if (fieldView == null) fieldView = new SignalField(a);
+    if (fieldView.getParent() instanceof ViewGroup) ((ViewGroup) fieldView.getParent()).removeView(
+      fieldView
+    );
     String st = a.voiceState.equals("idle") ? a.agent.stage : a.voiceState;
     fieldView.update(st, a.motion());
     hero.addView(fieldView, new FrameLayout.LayoutParams(-1, -1));
@@ -257,7 +259,7 @@ public final class Console {
     k.add(bottom, mic, 43, 43);
     hero.addView(bottom, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
     k.tap(hero, a::microphone, t("Voice control", "کنترل صوتی"));
-    k.add(v, hero, -1, 199);
+    k.add(v, hero, -1, a.getResources().getConfiguration().screenHeightDp < 420 ? 130 : 199);
     k.gap(v, 10);
     LinearLayout input = k.row();
     k.pad(input, 14, 0, 9, 0);

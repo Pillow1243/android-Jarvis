@@ -85,9 +85,14 @@ jobs:
           if [ "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" != "$GITHUB_SHA" ]; then echo 'Newer source exists; not publishing stale evidence.'; exit 0; fi
           mkdir -p docs/evidence/android
           rm -f docs/evidence/android/*
-          if [ "$DEVICE_RESULT" = success ]; then mkdir -p delivery; mv build/captured/JARVIS-NEXUS.apk delivery/; git add -f delivery/JARVIS-NEXUS.apk; fi
+          if [ "$DEVICE_RESULT" = success ] && [ "$COMPAT_RESULT" = success ]; then
+            mkdir -p delivery; mv build/captured/JARVIS-NEXUS.apk delivery/; git add -f delivery/JARVIS-NEXUS.apk
+          else
+            # Keep failed candidate logs for diagnosis, but never promote an unverified APK.
+            rm -f build/captured/JARVIS-NEXUS.apk
+          fi
           cp build/captured/* docs/evidence/android/
           for path in build/compat-results/compat-*/result.json; do if [ -f "$path" ]; then cp "$path" "docs/evidence/android/$(basename "$(dirname "$path")").json"; fi; done
-          printf 'Source: %s\nRun: https://github.com/%s/actions/runs/%s\nDevice job: %s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$DEVICE_RESULT" > docs/evidence/android/run-source.txt
+          printf 'Source: %s\nRun: https://github.com/%s/actions/runs/%s\nDevice job: %s\nCompatibility jobs: %s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$DEVICE_RESULT" "$COMPAT_RESULT" > docs/evidence/android/run-source.txt
           git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add docs/evidence/android; git commit -m "Record Android device evidence for ${GITHUB_SHA:0:8}"; git push origin "HEAD:$GITHUB_REF_NAME"

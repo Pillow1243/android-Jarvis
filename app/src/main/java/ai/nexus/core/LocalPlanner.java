@@ -29,6 +29,10 @@ public final class LocalPlanner {
     String s = raw.trim().replaceFirst("(?iu)^(?:jarvis|nexus|جرویس|جارویس|نکسوس)[،,:! ]+", "");
     // A message, note, query, or reminder body may itself contain conjunctions. Preserve it verbatim.
     Matcher guard = match("if (.+?) is installed,? (?:then )?open (?:it|that app)", s);
+    if (guard == null) guard = match(
+      "اگر (.+?) نصب (?:است|بود|شده)[،,]?\\s+(?:آن را |اونو |اون رو |بازش )?(?:باز کن|کن)",
+      s
+    );
     if (guard != null) {
       String name = guard.group(1);
       return Arrays.asList(new Call("find_app", "name", name), new Call("launch_app", "name", name));
@@ -65,11 +69,45 @@ public final class LocalPlanner {
     if (
       (m = match("(?:remember|save note|یادت باشه|به خاطر بسپار)[: ]+(.+)", s)) != null
     ) return new Call("save_note", "text", m.group(1));
-    if ((m = match("(?:remind me at|ساعت) (\\S+)(?: یادآوری کن)? (?:to |که )?(.+)", s)) != null) {
+    if (
+      (m = match(
+          "(?:remind me at|ساعت) (\\S+)(?: (am|pm|صبح|ظهر|عصر|شب))?(?: یادآوری کن)? (?:to |که )?(.+)",
+          s
+        )) !=
+      null
+    ) {
       String at = Text.digits(m.group(1));
-      if (at.equals("هفت")) at = "7";
-      if (at.matches("\\d{1,2}")) at += ":00";
-      if (at.matches("\\d{1,2}:\\d{2}")) return new Call("set_reminder", "time", at, "text", m.group(2));
+      String[] words = {
+        "صفر",
+        "یک",
+        "دو",
+        "سه",
+        "چهار",
+        "پنج",
+        "شش",
+        "هفت",
+        "هشت",
+        "نه",
+        "ده",
+        "یازده",
+        "دوازده",
+      };
+      for (int i = 0; i < words.length; i++) if (at.equals(words[i])) at = String.valueOf(i);
+      Matcher clock = match("([0-9]{1,2})(?::([0-5][0-9]))?", at);
+      if (clock != null) {
+        int hour = Integer.parseInt(clock.group(1));
+        String period = m.group(2);
+        if (hour > 23 || (period != null && (hour == 0 || hour > 12))) return null;
+        if (period != null) hour = (hour % 12) + (period.matches("(?iu)pm|ظهر|عصر|شب") ? 12 : 0);
+        String minute = clock.group(2) == null ? "00" : clock.group(2);
+        return new Call(
+          "set_reminder",
+          "time",
+          String.format(Locale.ROOT, "%02d:%s", hour, minute),
+          "text",
+          m.group(3)
+        );
+      }
     }
     return null;
   }
@@ -126,6 +164,13 @@ public final class LocalPlanner {
       m.group(1)
     );
     if ((m = match("(?:route to|directions to|مسیر) (.+)", s)) != null) return new Call(
+      "maps",
+      "mode",
+      "route",
+      "place",
+      m.group(1)
+    );
+    if ((m = match("(?:منو |مرا )?به (.+?) (?:ببر|مسیریابی کن)", s)) != null) return new Call(
       "maps",
       "mode",
       "route",

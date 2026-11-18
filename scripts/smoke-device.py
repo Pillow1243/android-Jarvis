@@ -28,10 +28,22 @@ try:
     shell('wm','size','720x1440');shell('wm','density','320')
     report['startup']=shell('am','start','-W','-n','ai.nexus/.MainActivity');find('command_input');report['passed'].append('launch and 360dp UI')
     click('nav_activity');click('Run system check');find('Device report +1');find('Verified');find('App registry');report['passed'].append('two-step diagnostics via visible controls')
-    click('nav_home');click('command_input');find('command_text');shell('input','text','call%s+12025550101');click('Run command');find('Approve action')
+    click('nav_home');click('command_input');click('command_text')
+    shell('input','text','call%s2025550101');find('call 2025550101')
+    # A tap coordinate from a moving IME-inset layout is unreliable on Oreo. Hide an open
+    # keyboard, then reacquire the button. Never send BACK if the IME isn't actually showing.
+    if 'mInputShown=true' in shell('dumpsys','input_method'): shell('input','keyevent','4')
+    click('Run command');find('Approve action');find('Number\n2025550101')
     shell('am','force-stop','ai.nexus');shell('am','start','-W','-n','ai.nexus/.MainActivity');click('nav_activity');find('Interrupted',True);click('Prepare a call');find('not replayed');report['passed'].append('killed at approval; safe interrupted receipt on restart, no dialer replay')
     report['status']='pass'
 except Exception as e:
-    report['status']='fail';report['failure']=str(e);raise
+    report['status']='fail';report['failure']=str(e)
+    # Disposable emulator populated only with synthetic test input; keep actual screen evidence.
+    try:
+        ui=tree();report['visible_app_labels']=[(n.get('text') or n.get('content-desc'))[:110] for n in ui.iter('node') if n.get('package')=='ai.nexus' and (n.get('text') or n.get('content-desc'))][:55]
+        report['foreground_packages']=sorted({n.get('package','') for n in ui.iter('node')})
+        (out/'failure.png').write_bytes(subprocess.check_output(['adb','exec-out','screencap','-p'],timeout=10))
+    except Exception: pass
+    raise
 finally:
     (out/'result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
