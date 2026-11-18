@@ -1,7 +1,0 @@
-Starting: Intent { cmp=ai.nexus.test/.FixtureWindow }
-Status: ok
-LaunchState: COLD
-Activity: ai.nexus.test/.FixtureWindow
-TotalTime: 3171
-WaitTime: 3177
-Complete

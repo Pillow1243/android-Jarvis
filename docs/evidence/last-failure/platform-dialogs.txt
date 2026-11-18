@@ -1,2 +1,0 @@
-Pixel Launcher ANR over test app: chose system Wait (1). No Nexus error suppressed.
-Pixel Launcher ANR over test app: chose system Wait (2). No Nexus error suppressed.

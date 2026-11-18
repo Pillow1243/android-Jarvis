@@ -1,1 +1,0 @@
-11-18 19:41:25.213   555  2344 I am_anr  : [0,1158,com.google.android.apps.nexuslauncher,885767749,Input dispatching timed out (Application does not have a focused window).]

@@ -1,9 +1,0 @@
-PASS  Planner, Farsi normalization, schemas, registry and error classification
-FAIL  java.lang.AssertionError: Timed out: visible node: model_id
-	at ai.nexus.test.NexusInstrumentation.waitFor(NexusInstrumentation.java:143)
-	at ai.nexus.test.NexusInstrumentation.node(NexusInstrumentation.java:169)
-	at ai.nexus.test.NexusInstrumentation.navigation(NexusInstrumentation.java:338)
-	at ai.nexus.test.NexusInstrumentation.onStart(NexusInstrumentation.java:245)
-	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
-
-Assertions: 51
