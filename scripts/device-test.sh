@@ -8,12 +8,15 @@ adb() { timeout -k 4s 60s "$adb_bin" "$@"; }
 phase() { echo "$1" > "$out/runner-phase.txt"; echo "::notice::Device verification: $1"; }
 phase setup
 adb wait-for-device
+hardware=$(adb shell getprop ro.hardware | tr -d '\r')
+[[ "$hardware" = ranchu || "$hardware" = goldfish ]] || { echo 'This fixture suite is for a disposable AVD only.' >&2; exit 1; }
+# Do not inject an early Menu key into a booting launcher with no focused window.
+adb shell am start -W -a android.settings.SETTINGS > "$out/boot-ui.txt"
 adb shell wm size 1080x2340; adb shell wm density 420
 adb shell settings put system font_scale 1.0
 adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 1
-adb shell input keyevent 82
 adb install -r "$apk" | tee "$out/install.txt"; grep -q Success "$out/install.txt"
 adb install -r -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb shell pm grant ai.nexus.test android.permission.READ_CONTACTS

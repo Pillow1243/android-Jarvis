@@ -12,7 +12,14 @@ def tree():
 def find(label, partial=False):
     end=time.monotonic()+18
     while time.monotonic()<end:
-        for n in tree().iter('node'):
+        nodes=list(tree().iter('node'))
+        # Never acknowledge Nexus errors or permissions. The fresh Pixel image may show this
+        # specific, unrelated launcher ANR while it boots; Wait can resurface it indefinitely.
+        if report.get('launcher_dialogs',0)<2 and any(n.get('package')=='android' and n.get('text') in ("Pixel Launcher isn't responding",'Pixel Launcher isn’t responding') for n in nodes):
+            close=next((n for n in nodes if n.get('package')=='android' and n.get('text')=='Close app'),None)
+            if close is not None:
+                l,t,r,b=map(int,re.findall(r'\d+',close.get('bounds')));shell('input','tap',str((l+r)//2),str((t+b)//2));report['launcher_dialogs']=report.get('launcher_dialogs',0)+1;continue
+        for n in nodes:
             values=[n.get('content-desc',''),n.get('text','')]
             if any(label in v if partial else label==v for v in values):return n
     raise AssertionError('Visible control not found: '+label)
@@ -24,7 +31,8 @@ apk=Path(os.environ.get('NEXUS_APK','build/input/JARVIS-NEXUS.apk'))
 api=shell('getprop','ro.build.version.sdk');out=Path('build/compat-'+api);out.mkdir(parents=True,exist_ok=True)
 report={'api':api,'fingerprint':shell('getprop','ro.build.fingerprint'),'apk_sha256':hashlib.sha256(apk.read_bytes()).hexdigest(),'passed':[]}
 try:
-    assert 'Success' in adb('install','-r',str(apk));report['passed'].append('install');shell('input','keyevent','82')
+    assert shell('getprop','ro.hardware') in ('ranchu','goldfish'), 'Disposable AVD required'
+    assert 'Success' in adb('install','-r',str(apk));report['passed'].append('install');shell('am','start','-W','-a','android.settings.SETTINGS')
     shell('wm','size','720x1440');shell('wm','density','320')
     report['startup']=shell('am','start','-W','-n','ai.nexus/.MainActivity');find('command_input');report['passed'].append('launch and 360dp UI')
     click('nav_activity');click('Run system check');find('Device report +1');find('Verified');find('App registry');report['passed'].append('two-step diagnostics via visible controls')

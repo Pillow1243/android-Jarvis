@@ -30,10 +30,12 @@ public final class NexusInstrumentation extends Instrumentation {
   private int checks, failures, launcherWaits;
 
   // Fresh software-rendered Pixel images can display a stock-launcher ANR over the target.
-  // Acknowledge ONLY that exact foreign dialog via Android's normal Wait control. Never hide or
+  // Acknowledge ONLY that exact foreign dialog via the system's Close app control on the disposable AVD. Never hide or
   // acknowledge an app-under-test ANR/crash, a permission prompt, or a security dialog here.
   private boolean waitForLauncher() throws Exception {
-    if (launcherWaits >= 2) return false;
+    if (
+      launcherWaits >= 2 || !(Build.HARDWARE.equals("ranchu") || Build.HARDWARE.equals("goldfish"))
+    ) return false;
     AccessibilityNodeInfo root = auto.getRootInActiveWindow();
     if (
       root == null ||
@@ -43,7 +45,7 @@ public final class NexusInstrumentation extends Instrumentation {
       find(root, "Pixel Launcher isn't responding") == null &&
       find(root, "Pixel Launcher isn’t responding") == null
     ) return false;
-    AccessibilityNodeInfo button = find(root, "Wait");
+    AccessibilityNodeInfo button = find(root, "Close app");
     if (button == null || !button.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return false;
     launcherWaits++;
     try (
@@ -52,7 +54,7 @@ public final class NexusInstrumentation extends Instrumentation {
       )
     ) {
       log.println(
-        "Pixel Launcher ANR over test app: chose system Wait (" +
+        "Disposable emulator: closed unresponsive Pixel Launcher via system dialog (" +
           launcherWaits +
           "). No Nexus error suppressed."
       );
@@ -240,9 +242,9 @@ public final class NexusInstrumentation extends Instrumentation {
       phase("launch");
       getTargetContext().startActivity(launch);
       waitFor(() -> a != null && ui(() -> a.indexed && a.active), "foreground application index");
-      phase("navigation");
+      phase("core");
       programTests();
-      navigation();
+      scenario("navigation", this::navigation);
       scenario("sequence", this::sequence);
       scenario("memory", this::memory);
       scenario("contacts", this::contacts);
