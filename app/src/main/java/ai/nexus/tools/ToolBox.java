@@ -721,12 +721,19 @@ public final class ToolBox {
       0
     ))
       if (r.activityInfo != null) dedicated.add(r.activityInfo.packageName);
+    Set<String> sms = new HashSet<>();
+    for (ResolveInfo r : pm.queryIntentActivities(
+      new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:")),
+      PackageManager.MATCH_DEFAULT_ONLY
+    ))
+      if (r.activityInfo != null) sms.add(r.activityInfo.packageName);
     Map<String, String> all = new TreeMap<>(),
       mail = new TreeMap<>();
     for (ResolveInfo r : pm.queryIntentActivities(draft, PackageManager.MATCH_DEFAULT_ONLY)) {
       if (r.activityInfo == null || !r.activityInfo.exported || !r.activityInfo.enabled) continue;
       String pkg = r.activityInfo.packageName,
         label = r.activityInfo.applicationInfo.loadLabel(pm) + "\n" + pkg;
+      if (sms.contains(pkg) && !dedicated.contains(pkg)) continue; // An email must not silently become an MMS.
       all.put(pkg, label);
       if (dedicated.contains(pkg)) mail.put(pkg, label);
     }
@@ -735,8 +742,8 @@ public final class ToolBox {
       h.finish(
         Receipt.failed(
           h.tr(
-            "No application is available for an email draft.",
-            "هیچ برنامه‌ای برای پیش‌نویس ایمیل در دسترس نیست."
+            "Set up an email app first. The draft was not shared with a messaging app.",
+            "ابتدا برنامهٔ ایمیل را تنظیم کنید؛ پیش‌نویس با پیام‌رسان به اشتراک گذاشته نشد."
           ),
           "no_handler"
         )

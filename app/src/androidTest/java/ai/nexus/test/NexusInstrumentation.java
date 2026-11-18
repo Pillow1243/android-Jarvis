@@ -27,7 +27,39 @@ public final class NexusInstrumentation extends Instrumentation {
   private UiAutomation auto;
   private File evidence;
   private final List<String> results = new ArrayList<>();
-  private int checks, failures;
+  private int checks, failures, launcherWaits;
+
+  // Fresh software-rendered Pixel images can display a stock-launcher ANR over the target.
+  // Acknowledge ONLY that exact foreign dialog via Android's normal Wait control. Never hide or
+  // acknowledge an app-under-test ANR/crash, a permission prompt, or a security dialog here.
+  private boolean waitForLauncher() throws Exception {
+    if (launcherWaits >= 2) return false;
+    AccessibilityNodeInfo root = auto.getRootInActiveWindow();
+    if (
+      root == null ||
+      !"android".contentEquals(root.getPackageName() == null ? "" : root.getPackageName())
+    ) return false;
+    if (
+      find(root, "Pixel Launcher isn't responding") == null &&
+      find(root, "Pixel Launcher isn’t responding") == null
+    ) return false;
+    AccessibilityNodeInfo button = find(root, "Wait");
+    if (button == null || !button.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return false;
+    launcherWaits++;
+    try (
+      PrintWriter log = new PrintWriter(
+        new FileOutputStream(new File(evidence, "platform-dialogs.txt"), true)
+      )
+    ) {
+      log.println(
+        "Pixel Launcher ANR over test app: chose system Wait (" +
+          launcherWaits +
+          "). No Nexus error suppressed."
+      );
+    }
+    SystemClock.sleep(500);
+    return true;
+  }
 
   private interface Scenario {
     void run() throws Exception;
@@ -88,6 +120,7 @@ public final class NexusInstrumentation extends Instrumentation {
     long end = SystemClock.uptimeMillis() + 13000;
     do {
       if (test.call()) return;
+      if (waitForLauncher()) end += 2500;
       SystemClock.sleep(100);
     } while (SystemClock.uptimeMillis() < end);
     throw new AssertionError("Timed out: " + label);
@@ -269,6 +302,7 @@ public final class NexusInstrumentation extends Instrumentation {
   }
 
   private void navigation() throws Exception {
+    node("nav_agent");
     shot("01-home");
     for (String dest : Arrays.asList("agent", "activity", "tools", "memory")) {
       click("nav_" + dest);
@@ -742,44 +776,95 @@ public final class NexusInstrumentation extends Instrumentation {
         ),
       "resolved mail applications"
     );
-    String gmail = "com.google.android.gm";
-    if (ui(() -> a.agent.stage.equals("clarifying"))) {
-      String label = a
-        .getPackageManager()
-        .getApplicationLabel(a.getPackageManager().getApplicationInfo(gmail, 0))
-        .toString();
-      click(label + "\n" + gmail);
+    Map<String, String> clients = new LinkedHashMap<>();
+    PackageManager pm = a.getPackageManager();
+    Set<String> smsApps = new HashSet<>(),
+      emailApps = new HashSet<>();
+    for (android.content.pm.ResolveInfo r : pm.queryIntentActivities(
+      new Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("smsto:")),
+      PackageManager.MATCH_DEFAULT_ONLY
+    ))
+      smsApps.add(r.activityInfo.packageName);
+    for (android.content.pm.ResolveInfo r : pm.queryIntentActivities(
+      new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_EMAIL),
+      0
+    ))
+      emailApps.add(r.activityInfo.packageName);
+    for (android.content.pm.ResolveInfo r : pm.queryIntentActivities(
+      new Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:qa@example.invalid")),
+      PackageManager.MATCH_DEFAULT_ONLY
+    )) {
+      String p = r.activityInfo.packageName;
+      if (
+        r.activityInfo.exported &&
+        r.activityInfo.enabled &&
+        (!smsApps.contains(p) || emailApps.contains(p))
+      ) clients.put(p, r.activityInfo.applicationInfo.loadLabel(pm) + "\n" + p);
     }
-    ok(
-      node("qa@example.invalid\nNexus QA\n\nUnsent fixture\n\nDestination app: " + gmail) != null,
-      "Exact email recipient, subject, body and destination package"
-    );
-    click("Approve action");
-    stage("handoff");
-    Intent actual = sent.get();
-    removeMonitor(watch);
-    ok(
-      actual != null &&
-        gmail.equals(actual.getPackage()) &&
-        "mailto:qa@example.invalid?subject=Nexus%20QA&body=Unsent%20fixture".equals(
-          actual.getDataString()
-        ),
-      "Actual non-intercepted Android email intent is limited to the approved app and exact draft"
-    );
-    long until = SystemClock.uptimeMillis() + 4000;
     String email;
-    do {
-      email = pkg();
-      if (email.equals(gmail)) break;
-      SystemClock.sleep(150);
-    } while (SystemClock.uptimeMillis() < until);
-    email =
-      "dispatched to " +
-      gmail +
-      ", visible=" +
-      (email.isEmpty() ? "not observed" : email) +
-      " (mailbox not verified)";
-    returnToNexus();
+    if (!ui(() -> a.agent.running)) {
+      ok(
+        clients.isEmpty() && a.agent.steps.get(0).code.equals("no_handler") && sent.get() == null,
+        "No eligible mail client: safe failure, no email intent or SMS fallback"
+      );
+      email = "NOT HANDED OFF · no eligible mail client";
+    } else {
+      if (ui(() -> a.agent.stage.equals("clarifying"))) {
+        node("Choose an email application");
+        String selected = null;
+        for (Map.Entry<String, String> e : clients.entrySet()) {
+          if (find(auto.getRootInActiveWindow(), e.getValue()) != null) {
+            selected = e.getValue();
+            if (e.getKey().equals("com.google.android.gm")) break;
+          }
+        }
+        ok(
+          selected != null,
+          "The visible app choice is a registered email handler, not an SMS-only client"
+        );
+        click(selected);
+      }
+      node("Approve action");
+      String reviewed = null;
+      for (String p : clients.keySet()) {
+        if (
+          find(
+            auto.getRootInActiveWindow(),
+            "qa@example.invalid\nNexus QA\n\nUnsent fixture\n\nDestination app: " + p
+          ) !=
+          null
+        ) {
+          reviewed = p;
+          break;
+        }
+      }
+      ok(reviewed != null, "Exact email recipient, subject, body and eligible destination package");
+      click("Approve action");
+      stage("handoff");
+      Intent actual = sent.get();
+      ok(
+        actual != null &&
+          reviewed.equals(actual.getPackage()) &&
+          "mailto:qa@example.invalid?subject=Nexus%20QA&body=Unsent%20fixture".equals(
+            actual.getDataString()
+          ),
+        "Non-intercepted native email dispatch matches reviewed package and draft"
+      );
+      long until = SystemClock.uptimeMillis() + 4000;
+      do {
+        email = pkg();
+        if (email.equals(reviewed)) break;
+        SystemClock.sleep(150);
+      } while (SystemClock.uptimeMillis() < until);
+      email =
+        "dispatched to " +
+        reviewed +
+        ", visible=" +
+        (email.isEmpty() ? "not observed" : email) +
+        " (mailbox not verified)";
+      returnToNexus();
+    }
+    removeMonitor(watch);
     action(() -> a.result("device report", true));
     ok(
       node("command_text") != null && node("device report") != null && !a.agent.running,
