@@ -2,7 +2,7 @@
 # Run on an expendable API 35+ AVD. Seeds two synthetic contacts in a TEST-ONLY APK.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-out=build/device-evidence; mkdir -p "$out"; apk=app/build/outputs/apk/debug/app-debug.apk
+out=build/device-evidence; mkdir -p "$out"; apk=${NEXUS_APK:-app/build/outputs/apk/debug/app-debug.apk}
 adb_bin=$(command -v adb)
 adb() { timeout -k 4s 60s "$adb_bin" "$@"; }
 phase() { echo "$1" > "$out/runner-phase.txt"; echo "::notice::Device verification: $1"; }
@@ -18,7 +18,7 @@ adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 1
 adb install -r "$apk" | tee "$out/install.txt"; grep -q Success "$out/install.txt"
-adb install -r -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb install -r -g -t "${NEXUS_TEST_APK:-app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk}"
 adb shell pm grant ai.nexus.test android.permission.READ_CONTACTS
 adb shell pm grant ai.nexus.test android.permission.WRITE_CONTACTS
 # The OS may still be bringing up user storage/providers just after a new image boots.
