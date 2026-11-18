@@ -14,6 +14,12 @@ jobs:
         run: |
           mkdir -p build/device-evidence
           ./gradlew --console=plain testDebugUnitTest assembleDebug assembleDebugAndroidTest >build/device-evidence/compile.txt 2>&1 || { tail -100 build/device-evidence/compile.txt; echo "::error::$(tail -60 build/device-evidence/compile.txt | head -40 | tr '\n' ' ')"; exit 1; }
+      - name: Public provider failure path and optional authenticated function probe
+        env:
+          JARVIS_TEST_GEMINI_API_KEY: ${{ secrets.JARVIS_TEST_GEMINI_API_KEY }}
+        run: python3 scripts/provider-check.py
+      - name: Gateway authorization and budget tests
+        run: node --test gateway/security.test.mjs
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -34,25 +40,54 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: nexus-device-evidence, path: build/device-evidence/, retention-days: 14 }
+  compatibility:
+    if: contains(github.event.head_commit.message, '[capture]')
+    needs: device
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: { api: [26, 36] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: nexus-device-evidence, path: build/input }
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules; sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          arch: x86_64
+          target: google_apis
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: python3 scripts/smoke-device.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: 'compat-${{ matrix.api }}', path: 'build/compat-${{ matrix.api }}/', retention-days: 14 }
   # Only a maintainer's explicit capture commit on this delivery branch may publish evidence.
   # Tests have no repository write token. Never force-push or replace newer work.
   capture:
     if: always() && github.ref == 'refs/heads/arena/f3d47646-android-jarvis' && contains(github.event.head_commit.message, '[capture]')
-    needs: device
+    needs: [device, compatibility]
     permissions: { contents: write }
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: nexus-device-evidence, path: build/captured }
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'compat-*', path: build/compat-results }
       - name: Preserve emulator evidence on the delivery branch
-        env: { DEVICE_RESULT: '${{ needs.device.result }}' }
+        env: { DEVICE_RESULT: '${{ needs.device.result }}', COMPAT_RESULT: '${{ needs.compatibility.result }}' }
         run: |
           if [ "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" != "$GITHUB_SHA" ]; then echo 'Newer source exists; not publishing stale evidence.'; exit 0; fi
           mkdir -p docs/evidence/android
           rm -f docs/evidence/android/*
           if [ "$DEVICE_RESULT" = success ]; then mkdir -p delivery; mv build/captured/JARVIS-NEXUS.apk delivery/; git add -f delivery/JARVIS-NEXUS.apk; fi
           cp build/captured/* docs/evidence/android/
+          for path in build/compat-results/compat-*/result.json; do if [ -f "$path" ]; then cp "$path" "docs/evidence/android/$(basename "$(dirname "$path")").json"; fi; done
           printf 'Source: %s\nRun: https://github.com/%s/actions/runs/%s\nDevice job: %s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$DEVICE_RESULT" > docs/evidence/android/run-source.txt
           git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add docs/evidence/android; git commit -m "Record Android device evidence for ${GITHUB_SHA:0:8}"; git push origin "HEAD:$GITHUB_REF_NAME"

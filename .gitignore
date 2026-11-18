@@ -10,3 +10,6 @@ local.properties
 *.aab
 .cache/
 __pycache__/
+*.db
+*.db-wal
+*.db-shm

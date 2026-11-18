@@ -12,7 +12,10 @@ adb shell settings put global animator_duration_scale 1
 adb shell input keyevent 82
 adb install -r "$apk" | tee "$out/install.txt"; grep -q Success "$out/install.txt"
 adb install -r -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-adb shell am start -W -n ai.nexus.test/ai.nexus.test.SeedContactActivity
+adb shell pm grant ai.nexus.test android.permission.READ_CONTACTS
+adb shell pm grant ai.nexus.test android.permission.WRITE_CONTACTS
+adb shell am broadcast --include-stopped-packages -a ai.nexus.test.SEED -n ai.nexus.test/ai.nexus.test.FixtureContacts | tee "$out/contact-fixture.txt"
+grep -q 'result=42' "$out/contact-fixture.txt" || { echo '::error::Contacts fixture precondition failed; see contact-fixture.txt'; exit 1; }
 adb shell am force-stop ai.nexus
 adb shell am start -W -n ai.nexus/.MainActivity | tee "$out/cold-start.txt"
 adb shell getprop ro.build.fingerprint > "$out/system-image.txt"
@@ -32,7 +35,7 @@ adb shell dumpsys gfxinfo ai.nexus > "$out/frames.txt"
 adb logcat -d -s AndroidRuntime:E > "$out/runtime-errors.txt"
 sha256sum "$apk" | cut -d' ' -f1 > "$out/apk.sha256"
 if ! grep -q NEXUS_TESTS_PASSED "$out/run.txt"; then adb shell uiautomator dump /sdcard/nexus-qa.xml >/dev/null || true; adb pull /sdcard/nexus-qa.xml "$out/failure-ui.xml" || true; echo "::error::$(grep -E 'AssertionError|Exception|Timed out' "$out/run.txt" | head -1)"; exit 1; fi
-adb shell am start -W -n ai.nexus.test/ai.nexus.test.SeedContactActivity --ez clear true
+adb shell am broadcast -a ai.nexus.test.SEED -n ai.nexus.test/ai.nexus.test.FixtureContacts --ez clear true
 # Non-UI postcondition: installation is exactly the binary being delivered.
 installed=$(adb shell pm path ai.nexus | tr -d '\r' | sed 's/^package://'); adb pull "$installed" "$out/installed.apk" >/dev/null
 cmp -s "$apk" "$out/installed.apk"; rm "$out/installed.apk"

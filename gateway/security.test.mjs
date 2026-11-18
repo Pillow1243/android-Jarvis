@@ -1,6 +1,61 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {generateKeyPairSync,sign} from 'node:crypto';import {authenticate,makeBudget,boundedBody} from './security.mjs';
-const {privateKey,publicKey}=generateKeyPairSync('rsa',{modulusLength:2048});const jwk={...publicKey.export({format:'jwk'}),kid:'fixture',use:'sig'};const cfg={issuer:'https://identity.example',audience:'nexus-test'};
-function token(delta={},header={}){const enc=x=>Buffer.from(JSON.stringify(x)).toString('base64url');const head=enc({alg:'RS256',kid:'fixture',...header})+'.'+enc({iss:cfg.issuer,aud:cfg.audience,exp:1500,iat:990,scope:'nexus:plan',sub:'test-user',...delta});return 'Bearer '+head+'.'+sign('RSA-SHA256',Buffer.from(head),privateKey).toString('base64url');}
-test('narrowly scoped, signed access token',async()=>{assert.equal(await authenticate(token(),cfg,async()=>[jwk],1000),'test-user');for(const opts of [{iss:'other'},{exp:999},{exp:99999},{scope:'openid'},{aud:'other'}])await assert.rejects(authenticate(token(opts),cfg,async()=>[jwk],1000));await assert.rejects(authenticate(token({},{alg:'none'}),cfg,async()=>[jwk],1000));});
-test('atomic per-principal and global limits with reset',()=>{const reserve=makeBudget(':memory:','fixture');const limits=[['minute',60000,1],['global',86400000,2]];assert.equal(reserve('a',limits,0),true);assert.equal(reserve('a',limits,0),false);assert.equal(reserve('b',limits,0),true);assert.equal(reserve('c',limits,1000),false);assert.equal(reserve('c',limits,86400001),true);});
-test('only native tool declarations, text parts and bounded generation',()=>{const b={contents:[{role:'user',parts:[{text:'hello'}]}],tools:[{functionDeclarations:[{name:'device_report'}]}],generationConfig:{maxOutputTokens:999999}};assert.equal(boundedBody(b).generationConfig.maxOutputTokens,1600);assert.throws(()=>boundedBody({...b,tools:[{codeExecution:{}}]}));assert.throws(()=>boundedBody({...b,contents:[{role:'user',parts:[{fileData:{fileUri:'arbitrary'}}]}]}));});
+import test from "node:test";
+import assert from "node:assert/strict";
+import { generateKeyPairSync, sign } from "node:crypto";
+import { authenticate, makeBudget, boundedBody } from "./security.mjs";
+const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+const jwk = { ...publicKey.export({ format: "jwk" }), kid: "fixture", use: "sig" };
+const cfg = { issuer: "https://identity.example", audience: "nexus-test" };
+function token(delta = {}, header = {}) {
+  const enc = (x) => Buffer.from(JSON.stringify(x)).toString("base64url");
+  const head =
+    enc({ alg: "RS256", kid: "fixture", ...header }) +
+    "." +
+    enc({
+      iss: cfg.issuer,
+      aud: cfg.audience,
+      exp: 1500,
+      iat: 990,
+      scope: "nexus:plan",
+      sub: "test-user",
+      ...delta,
+    });
+  return (
+    "Bearer " + head + "." + sign("RSA-SHA256", Buffer.from(head), privateKey).toString("base64url")
+  );
+}
+test("narrowly scoped, signed access token", async () => {
+  assert.equal(await authenticate(token(), cfg, async () => [jwk], 1000), "test-user");
+  for (const opts of [
+    { iss: "other" },
+    { exp: 999 },
+    { exp: 99999 },
+    { scope: "openid" },
+    { aud: "other" },
+  ])
+    await assert.rejects(authenticate(token(opts), cfg, async () => [jwk], 1000));
+  await assert.rejects(authenticate(token({}, { alg: "none" }), cfg, async () => [jwk], 1000));
+});
+test("atomic per-principal and global limits with reset", () => {
+  const reserve = makeBudget(":memory:", "fixture");
+  const limits = [
+    ["minute", 60000, 1],
+    ["global", 86400000, 2],
+  ];
+  assert.equal(reserve("a", limits, 0), true);
+  assert.equal(reserve("a", limits, 0), false);
+  assert.equal(reserve("b", limits, 0), true);
+  assert.equal(reserve("c", limits, 1000), false);
+  assert.equal(reserve("c", limits, 86400001), true);
+});
+test("only native tool declarations, text parts and bounded generation", () => {
+  const b = {
+    contents: [{ role: "user", parts: [{ text: "hello" }] }],
+    tools: [{ functionDeclarations: [{ name: "device_report" }] }],
+    generationConfig: { maxOutputTokens: 999999 },
+  };
+  assert.equal(boundedBody(b).generationConfig.maxOutputTokens, 1600);
+  assert.throws(() => boundedBody({ ...b, tools: [{ codeExecution: {} }] }));
+  assert.throws(() =>
+    boundedBody({ ...b, contents: [{ role: "user", parts: [{ fileData: { fileUri: "arbitrary" } }] }] }),
+  );
+});

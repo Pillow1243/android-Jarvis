@@ -10,7 +10,7 @@
         <intent><action android:name="android.speech.RecognitionService"/></intent>
         <intent><action android:name="android.intent.action.TTS_SERVICE"/></intent>
     </queries>
-    <application android:name=".NexusApp" android:label="JARVIS NEXUS" android:icon="@drawable/nexus_mark" android:allowBackup="false" android:usesCleartextTraffic="false" android:networkSecurityConfig="@xml/network_security" android:supportsRtl="true" android:theme="@style/NexusTheme">
+    <application android:enableOnBackInvokedCallback="true" android:name=".NexusApp" android:label="JARVIS NEXUS" android:icon="@mipmap/ic_launcher" android:allowBackup="false" android:usesCleartextTraffic="false" android:networkSecurityConfig="@xml/network_security" android:supportsRtl="true" android:theme="@style/NexusTheme">
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:configChanges="orientation|screenSize|keyboardHidden|screenLayout" android:windowSoftInputMode="adjustResize">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>
