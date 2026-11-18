@@ -13,7 +13,7 @@ jobs:
       - name: Build application and device tests
         run: |
           mkdir -p build/device-evidence
-          ./gradlew --console=plain assembleDebug assembleDebugAndroidTest >build/device-evidence/compile.txt 2>&1 || { tail -100 build/device-evidence/compile.txt; echo "::error::$(tail -60 build/device-evidence/compile.txt | head -40 | tr '\n' ' ')"; exit 1; }
+          ./gradlew --console=plain testDebugUnitTest assembleDebug assembleDebugAndroidTest >build/device-evidence/compile.txt 2>&1 || { tail -100 build/device-evidence/compile.txt; echo "::error::$(tail -60 build/device-evidence/compile.txt | head -40 | tr '\n' ' ')"; exit 1; }
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

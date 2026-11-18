@@ -9,7 +9,7 @@ plat=$ANDROID_HOME/platforms/android-36/android.jar
 out=build/sdk-debug; rm -rf "$out"; mkdir -p "$out"/{gen,classes,dex} "$HOME/.android"
 "$bt/aapt2" compile --dir app/src/main/res -o "$out/resources.zip"
 # Gradle normally writes applicationId and uses-sdk at manifest merge time.
-sed 's/<manifest /<manifest package="ai.nexus" android:versionName="1.0.0" android:versionCode="1" /;s/<uses-feature /<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"\/><uses-feature /' app/src/main/AndroidManifest.xml > "$out/AndroidManifest.xml"
+sed 's/<manifest /<manifest package="ai.nexus" android:versionName="1.0.0" android:versionCode="1" /;s/<application /<application android:debuggable="true" /;s/<uses-feature /<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"\/><uses-feature /' app/src/main/AndroidManifest.xml > "$out/AndroidManifest.xml"
 "$bt/aapt2" link -I "$plat" --manifest "$out/AndroidManifest.xml" --java "$out/gen" -o "$out/base.apk" "$out/resources.zip"
 find app/src/main/java "$out/gen" -name '*.java' > "$out/sources"
 javac --release 8 -encoding UTF-8 -cp "$plat" -d "$out/classes" @"$out/sources"

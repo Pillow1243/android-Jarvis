@@ -21,6 +21,12 @@ adb logcat -c
 adb shell am instrument -w -r ai.nexus.test/ai.nexus.test.NexusInstrumentation | tee "$out/run.txt"
 # run-as is possible only on this debug build. No contacts database is copied.
 for f in $(adb shell run-as ai.nexus ls files/evidence/ | tr -d '\r' | grep -E '^[a-zA-Z0-9_-]+\.(png|txt)$'); do adb exec-out run-as ai.nexus cat "files/evidence/$f" > "$out/$f"; done
+if grep -q NEXUS_TESTS_PASSED "$out/run.txt"; then
+  # Instrumentation ends the target process. Sample the actual relaunched foreground app.
+  adb shell am start -W -n ai.nexus/.MainActivity > "$out/relaunch.txt"
+  adb shell dumpsys gfxinfo ai.nexus reset >/dev/null
+  sleep 5
+fi
 adb shell dumpsys meminfo ai.nexus > "$out/memory.txt"
 adb shell dumpsys gfxinfo ai.nexus > "$out/frames.txt"
 adb logcat -d -s AndroidRuntime:E > "$out/runtime-errors.txt"

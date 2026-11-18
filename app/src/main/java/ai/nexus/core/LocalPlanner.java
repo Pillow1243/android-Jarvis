@@ -10,6 +10,7 @@ public final class LocalPlanner {
     public List<Call> plan(String raw,String lastApp){
         String s=raw.trim().replaceFirst("(?iu)^(?:jarvis|nexus|جرویس|جارویس|نکسوس)[،,:! ]+","");
         // A message, note, query, or reminder body may itself contain conjunctions. Preserve it verbatim.
+        Matcher guard=match("if (.+?) is installed,? (?:then )?open (?:it|that app)",s);if(guard!=null){String name=guard.group(1);return Arrays.asList(new Call("find_app","name",name),new Call("launch_app","name",name));}
         Call atomic=content(s);if(atomic!=null)return Collections.singletonList(atomic);
         String[] parts=s.split("(?iu)\\s*(?:[;؛]|,?\\s+and then\\s+|,?\\s+then\\s+|\\s+and\\s+(?=(?:open|list|show|check|search)\\b)|[،,]?\\s*(?:و بعد|سپس|بعدش)\\s+|[،,]\\s*(?=سایت|برنامه|تنظیمات|open )|\\s+و\\s+(?=عبارت|سایت|برنامه|تنظیمات))\\s*",-1);
         if(parts.length>8)return Collections.emptyList();List<Call> result=new ArrayList<>();for(String part:parts){Call c=one(part.trim(),lastApp);if(c==null)return Collections.emptyList();result.add(c);if(c.name.equals("launch_app"))lastApp=c.get("name");}return result;
@@ -21,7 +22,9 @@ public final class LocalPlanner {
         if((m=match("(?:remind me at|ساعت) (\\S+)(?: یادآوری کن)? (?:to |که )?(.+)",s))!=null){String at=Text.digits(m.group(1));if(at.equals("هفت"))at="7";if(at.matches("\\d{1,2}"))at+=":00";if(at.matches("\\d{1,2}:\\d{2}"))return new Call("set_reminder","time",at,"text",m.group(2));}
         return null;
     }
-    private Call one(String s,String lastApp){String n=Text.norm(s).replaceFirst("[.!؟]+$","");Matcher m;Call c=content(s);if(c!=null)return c;
+    private Call one(String s,String lastApp){String n=Text.norm(s).replaceFirst("[.!؟]+$","");Matcher m;Call c=content(s);if(c!=null)return c;s=s.replaceFirst("[.!؟]+$", "").trim();
+        if(n.matches("(?:return to|open) (?:the )?previous app|برگرد به برنامه قبلی"))return new Call("previous_app");
+        if((m=match("(?:is (.+?) installed[?]?|check app (.+))",s))!=null)return new Call("find_app","name",m.group(1)==null?m.group(2):m.group(1));
         if(n.matches("(?:device (?:status|report)|(?:show |check )?(?:my )?(?:device|system) (?:status|report)|گزارش دستگاه|وضعیت (?:دستگاه|سیستم|گوشی))"))return new Call("device_report");
         if(n.matches("(?:list|show)(?: (?:installed|my|launchable))? (?:apps|applications)|app registry|فهرست برنامه ها|لیست برنامه ها|برنامه ها(?: رو)? (?:نشان بده|نشون بده)"))return new Call("list_apps");
         if(n.matches("(?:open (?:it|that app)|اون برنامه رو باز کن|همون برنامه رو باز کن)"))return lastApp.isEmpty()?null:new Call("launch_app","name",lastApp);
